@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>皮克敏全能收集助手</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:system-ui,sans-serif;background:#111;color:#eee;overscroll-behavior:none}
+#app{min-height:100vh;padding:12px;max-width:640px;margin:0 auto}
+
+.top-bar{display:flex;align-items:center;justify-content:space-between;padding:10px 2px 8px}
+.top-bar h1{font-size:20px;font-weight:500;color:#fff}
+.btn-toggle-all{background:#252525;border:1px solid #444;color:#aaa;border-radius:9px;padding:7px 13px;font-size:12px;cursor:pointer;white-space:nowrap}
+.btn-toggle-all:active{background:#333;color:#fff}
+
+.stats-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px}
+.stat-pill{background:#1a1a1a;border-radius:10px;padding:7px 4px;font-size:11px;color:#888;text-align:center;line-height:1.5}
+.stat-pill span{display:block;font-size:16px;font-weight:500;color:#eee;line-height:1.3}
+.stat-pill small{font-size:10px;color:#555}
+
+.search-bar{width:100%;background:#1e1e1e;border:1px solid #3a3a3a;border-radius:11px;padding:11px 14px;color:#eee;font-size:15px;margin-bottom:10px;outline:none}
+.search-bar:focus{border-color:#5599ee}
+
+.add-cat-row{display:flex;gap:8px;margin-bottom:14px}
+.add-cat-row input{flex:1;background:#1e1e1e;border:1px solid #3a3a3a;border-radius:11px;padding:11px 14px;color:#eee;font-size:14px;outline:none}
+.add-cat-row input:focus{border-color:#5599ee}
+.btn-add-cat{background:#1e4a99;color:#aaccff;border:none;border-radius:11px;padding:11px 16px;font-size:14px;font-weight:500;cursor:pointer;white-space:nowrap}
+.btn-add-cat:active{background:#163a7a;transform:scale(0.94)}
+
+.no-result{text-align:center;padding:40px 0;color:#555;font-size:15px}
+
+/* ── 大類別 ── */
+.category{background:#1a1a1a;border-radius:14px;margin-bottom:12px;border:1px solid #2a2a2a}
+.category.dragging{opacity:0.35;border:1.5px dashed #5599ee}
+.category.drag-over-top{border-top:3px solid #5599ee}
+.category.drag-over-bot{border-bottom:3px solid #5599ee}
+
+.cat-header{display:flex;align-items:center;padding:11px 8px 11px 10px;background:#222;border-radius:13px;gap:4px;user-select:none}
+.drag-handle{font-size:17px;cursor:grab;padding:4px 7px;flex-shrink:0;touch-action:none;color:#555;line-height:1}
+.drag-handle:active{cursor:grabbing;color:#aaa}
+.cat-header-info{flex:1;cursor:pointer;min-width:0;overflow:hidden;padding:0 2px}
+.cat-title{font-size:15px;font-weight:500;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cat-stats{font-size:11px;color:#666;margin-top:2px;line-height:1.4}
+.cat-header-btns{display:flex;align-items:center;gap:14px;flex-shrink:0;padding-right:2px}
+.icon-btn{background:none;border:none;cursor:pointer;font-size:18px;padding:5px;line-height:1;transition:transform 0.1s}
+.icon-btn:active{transform:scale(0.82)}
+.icon-btn.del{color:#5a3333}
+.icon-btn.del:active{color:#ff5555}
+.icon-btn.arr{color:#555;font-size:14px;transition:transform 0.2s,color 0.1s}
+.icon-btn.arr.open{transform:rotate(90deg)}
+
+.cat-body{padding:8px 10px 10px}
+
+/* ── 子類別 ── */
+.subcat{background:#1f1f1f;border-radius:12px;margin-bottom:8px;border:1px solid #2d2d2d}
+.subcat.dragging{opacity:0.35;border:1.5px dashed #44aa77}
+.subcat.drag-over-top{border-top:3px solid #44aa77}
+.subcat.drag-over-bot{border-bottom:3px solid #44aa77}
+
+.subcat-header{display:flex;align-items:center;padding:9px 7px 9px 8px;gap:3px;user-select:none}
+.subcat-handle{font-size:15px;cursor:grab;padding:3px 6px;flex-shrink:0;touch-action:none;color:#444;line-height:1}
+.subcat-handle:active{cursor:grabbing;color:#888}
+.subcat-header-info{flex:1;cursor:pointer;min-width:0;padding:0 2px}
+.subcat-title{font-size:14px;font-weight:500;color:#bbb;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.subcat-stats{font-size:11px;color:#555;margin-top:1px}
+.subcat-header-btns{display:flex;align-items:center;gap:12px;flex-shrink:0;padding-right:2px}
+.subcat-del{background:none;border:none;color:#442222;font-size:16px;cursor:pointer;padding:5px;line-height:1}
+.subcat-del:active{color:#ff5555;transform:scale(0.82)}
+.subcat-arr{background:none;border:none;color:#484848;font-size:12px;padding:5px;cursor:pointer;transition:transform 0.2s}
+.subcat-arr.open{transform:rotate(90deg)}
+.subcat-body{padding:6px 8px 8px}
+
+/* ── 項目行 ── */
+.item-row{background:#272727;border-radius:11px;padding:8px 9px;margin-bottom:6px;display:flex;align-items:center;gap:6px;border:1px solid #303030}
+.item-row.dragging{opacity:0.35;border:1.5px dashed #5599ee}
+.item-row.drag-over-top{border-top:3px solid #5599ee}
+.item-row.drag-over-bot{border-bottom:3px solid #5599ee}
+.item-handle{font-size:14px;cursor:grab;padding:3px 5px;flex-shrink:0;touch-action:none;color:#383838;line-height:1}
+.item-handle:active{cursor:grabbing;color:#888}
+
+/* ── 狀態按鈕 4態 ── */
+.status-btn{width:48px;height:48px;border-radius:10px;border:none;cursor:pointer;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:2px;transition:transform 0.12s}
+.status-btn:active{transform:scale(0.83)}
+.status-btn .sico{font-size:16px;line-height:1}
+.status-btn .slbl{font-size:10px;font-weight:500;line-height:1}
+.s0{background:#2a2a2a;color:#555}
+.s1{background:#253d18;color:#7acc44}
+.s2{background:#382d15;color:#ddaa44}
+.s3{background:#2d1850;color:#bb77ff}
+
+.item-name{flex:1;font-size:13px;color:#ccc;line-height:1.3;word-break:break-all;min-width:0}
+
+/* ── 數量控制 ── */
+.dup-ctrl{display:flex;align-items:center;gap:4px;flex-shrink:0}
+.dup-btn{width:30px;height:30px;border-radius:8px;border:none;background:#303030;color:#aaa;font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:500;flex-shrink:0;transition:transform 0.1s}
+.dup-btn:active{transform:scale(0.8);background:#444}
+.dup-count{font-size:13px;font-weight:500;color:#888;min-width:20px;text-align:center}
+.item-del{background:none;border:none;color:#442222;font-size:15px;cursor:pointer;padding:4px;flex-shrink:0}
+.item-del:active{color:#ff5555;transform:scale(0.8)}
+
+.empty-hint{text-align:center;color:#3a3a3a;font-size:12px;padding:12px 0}
+
+/* ── 新增子類別區 ── */
+.add-subcat-area{margin-top:6px;background:#161616;border-radius:11px;padding:9px 10px}
+.add-subcat-row{display:flex;gap:6px;margin-bottom:6px}
+.add-subcat-row input{flex:1;background:#222;border:1px solid #383838;border-radius:9px;padding:8px 11px;color:#eee;font-size:13px;outline:none}
+.add-subcat-row input:focus{border-color:#5599ee}
+.btn-add-subcat{background:#174a2a;color:#55cc77;border:none;border-radius:9px;padding:8px 12px;font-size:13px;cursor:pointer;font-weight:500;white-space:nowrap}
+.btn-add-subcat:active{background:#113a20;transform:scale(0.92)}
+.btn-preset{background:#241e00;color:#ccaa22;border:1px solid #3a3000;border-radius:7px;padding:5px 10px;font-size:11px;cursor:pointer;font-weight:500}
+.btn-preset:active{transform:scale(0.9)}
+
+/* ── 新增項目區 ── */
+.add-item-area{margin-top:6px;background:#181818;border-radius:11px;padding:9px 10px}
+.add-item-row{display:flex;gap:6px;margin-bottom:7px}
+.add-item-row input{flex:1;background:#222;border:1px solid #383838;border-radius:9px;padding:8px 11px;color:#eee;font-size:13px;outline:none}
+.add-item-row input:focus{border-color:#5599ee}
+.btn-add-item{background:#152a45;color:#55aaee;border:none;border-radius:9px;padding:8px 12px;font-size:13px;cursor:pointer;font-weight:500;white-space:nowrap}
+.btn-add-item:active{background:#0f1f33;transform:scale(0.92)}
+.color-tags{display:flex;flex-wrap:wrap;gap:5px}
+.color-tag{border:none;border-radius:7px;padding:5px 9px;font-size:12px;font-weight:500;cursor:pointer;flex-shrink:0}
+.color-tag:active{transform:scale(0.84);opacity:0.75}
+
+/* ── 安裝說明 ── */
+.guide{max-width:640px;margin:28px auto 0;padding:18px 12px 28px;border-top:1px solid #222}
+.guide h2{font-size:16px;font-weight:500;color:#fff;margin-bottom:4px}
+.guide .subtitle{font-size:12px;color:#555;margin-bottom:16px}
+.guide-card{background:#161616;border-radius:12px;padding:14px;margin-bottom:12px;border:1px solid #222}
+.guide-card h3{font-size:13px;font-weight:500;color:#5588cc;margin-bottom:9px}
+.guide-step{display:flex;gap:9px;align-items:flex-start;margin-bottom:8px}
+.guide-step:last-child{margin-bottom:0}
+.step-num{background:#1a3366;color:#99bbff;font-size:11px;font-weight:500;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.step-text{font-size:12px;color:#999;line-height:1.5}
+.step-text strong{color:#ccc;font-weight:500}
+.guide-note{background:#181e18;border-radius:9px;padding:11px 13px;margin-top:12px}
+.guide-note p{font-size:11px;color:#558855;line-height:1.6}
+.guide-note p+p{margin-top:5px}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="top-bar">
+    <h1>🌱 皮克敏收集助手</h1>
+    <button class="btn-toggle-all" id="btnToggleAll" onclick="toggleAll()">全部收起</button>
+  </div>
+  <div class="stats-bar" id="statsBar"></div>
+  <input class="search-bar" id="searchInput" placeholder="🔍 搜尋類別、子類別或皮克敏名稱…" oninput="render()">
+  <div class="add-cat-row">
+    <input id="newCatName" placeholder="新增主類別名稱（如：餐廳）" onkeydown="if(event.key==='Enter')addCategory()">
+    <button class="btn-add-cat" onclick="addCategory()">＋ 新增</button>
+  </div>
+  <div id="catList"></div>
+</div>
+
+<div class="guide">
+  <h2>📲 如何把這個 App 加到手機桌面？</h2>
+  <p class="subtitle">免安裝、免上架，用瀏覽器三步完成。</p>
+  <div class="guide-card">
+    <h3>🍎 iOS／iPhone（Safari）</h3>
+    <div class="guide-step"><div class="step-num">1</div><div class="step-text">將 <strong>.html 檔案</strong> 上傳至 GitHub Pages、Dropbox 公開連結，或自己的伺服器。</div></div>
+    <div class="guide-step"><div class="step-num">2</div><div class="step-text">用 <strong>Safari</strong> 開啟網址，點底部「<strong>分享</strong>」按鈕（方形加箭頭）。</div></div>
+    <div class="guide-step"><div class="step-num">3</div><div class="step-text">選「<strong>加入主畫面</strong>」，輸入名稱後點「新增」，桌面即出現圖示。</div></div>
+  </div>
+  <div class="guide-card">
+    <h3>🤖 Android（Chrome）</h3>
+    <div class="guide-step"><div class="step-num">1</div><div class="step-text">先將 <strong>.html 檔案</strong> 放到可公開存取的網址。</div></div>
+    <div class="guide-step"><div class="step-num">2</div><div class="step-text">用 <strong>Chrome</strong> 開啟網址，點右上角「<strong>⋮ 三點選單</strong>」。</div></div>
+    <div class="guide-step"><div class="step-num">3</div><div class="step-text">選「<strong>新增至主畫面</strong>」，確認後桌面出現圖示，點擊即全螢幕開啟。</div></div>
+  </div>
+  <div class="guide-card">
+    <h3>💡 免費上架：GitHub Pages</h3>
+    <div class="guide-step"><div class="step-num">1</div><div class="step-text">前往 <strong>github.com</strong> 免費註冊，建立新 Repository。</div></div>
+    <div class="guide-step"><div class="step-num">2</div><div class="step-text">將本檔案改名 <strong>index.html</strong> 上傳到 Repository。</div></div>
+    <div class="guide-step"><div class="step-num">3</div><div class="step-text">進 <strong>Settings → Pages</strong>，Branch 選 main 後 Save，等一分鐘即獲得公開網址。</div></div>
+    <div class="guide-step"><div class="step-num">4</div><div class="step-text">手機開啟網址，依上方步驟加入主畫面，完成！</div></div>
+  </div>
+  <div class="guide-note">
+    <p>✅ 所有資料存於手機瀏覽器 LocalStorage，不上傳任何伺服器，完全離線可用。</p>
+    <p>⚠️ 清除瀏覽器快取或換裝置時資料會消失，建議定期備份。</p>
+    <p>🔄 更新程式碼時重新上傳 index.html 到 GitHub，App 下次開啟自動讀取新版本。</p>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════
+   常數
+══════════════════════════════════════════════ */
+const COLORS = [
+  {label:'紅', bg:'#4a1212', color:'#ffaaaa'},
+  {label:'黃', bg:'#433700', color:'#ffe566'},
+  {label:'青', bg:'#082c2c', color:'#55dddd'},
+  {label:'紫', bg:'#221148', color:'#cc88ff'},
+  {label:'白', bg:'#2d2d2d', color:'#eeeeee'},
+  {label:'粉', bg:'#481030', color:'#ffaacc'},
+  {label:'岩', bg:'#241b10', color:'#ccaa77'},
+  {label:'冰', bg:'#082033', color:'#88bbff'},
+  {label:'金', bg:'#332200', color:'#ffcc33'}
+];
+
+// 0=未擁有 1=花盆 2=普通 3=飾品
+const STATUS_DEF = [
+  {lbl:'未擁有', ico:'—',  cls:'s0'},
+  {lbl:'花盆',   ico:'🪴', cls:'s1'},
+  {lbl:'普通',   ico:'🌿', cls:'s2'},
+  {lbl:'飾品',   ico:'✨', cls:'s3'}
+];
+
+/* ══════════════════════════════════════════════
+   資料層
+══════════════════════════════════════════════ */
+const STORE_KEY = 'pikmin_v3';
+
+function loadData() {
+  try { return JSON.parse(localStorage.getItem(STORE_KEY)) || {cats:[]}; }
+  catch(e) { return {cats:[]}; }
+}
+function saveData(d) { localStorage.setItem(STORE_KEY, JSON.stringify(d)); }
+
+let data = loadData();
+let openCats    = {};
+let openSubcats = {};
+let allExpanded = true;
+
+/* 遷移舊 v2 資料 */
+data.cats.forEach(cat => {
+  if (!cat.subcats) cat.subcats = [];
+  if (cat.items && cat.items.length > 0 && cat.subcats.length === 0) {
+    cat.subcats.push({
+      id: 'sub_legacy_' + cat.id,
+      name: '預設',
+      items: cat.items.map(i => ({...i, status: Math.min(i.status||0, 3), dups: i.dups||0}))
+    });
+  }
+  if (cat.items) delete cat.items;
+});
+/* 確保每個 item 的 dups 與 status 一致 */
+data.cats.forEach(cat => cat.subcats.forEach(sub => sub.items.forEach(item => {
+  if (item.status > 0 && (!item.dups || item.dups < 1)) item.dups = 1;
+  if (item.dups === 0) item.status = 0;
+})));
+saveData(data);
+
+/* ══════════════════════════════════════════════
+   展開 / 收起
+══════════════════════════════════════════════ */
+function initOpen() {
+  data.cats.forEach(c => {
+    if (openCats[c.id] === undefined) openCats[c.id] = true;
+    c.subcats.forEach(s => {
+      if (openSubcats[s.id] === undefined) openSubcats[s.id] = true;
+    });
+  });
+}
+initOpen();
+
+function toggleCat(id) { openCats[id] = !openCats[id]; render(); }
+function toggleSubcat(id) { openSubcats[id] = !openSubcats[id]; render(); }
+function toggleAll() {
+  allExpanded = !allExpanded;
+  data.cats.forEach(c => {
+    openCats[c.id] = allExpanded;
+    c.subcats.forEach(s => { openSubcats[s.id] = allExpanded; });
+  });
+  document.getElementById('btnToggleAll').textContent = allExpanded ? '全部收起' : '全部展開';
+  render();
+}
+
+/* ══════════════════════════════════════════════
+   CRUD  ── 刪除全部加確認視窗
+══════════════════════════════════════════════ */
+function addCategory() {
+  const inp = document.getElementById('newCatName');
+  const name = inp.value.trim();
+  if (!name) return;
+  if (data.cats.some(c => c.name === name)) {
+    alert('⚠️ 已有該名稱類別，請換個名稱。');
+    return;
+  }
+  const id = 'cat_' + Date.now();
+  data.cats.push({id, name, subcats:[]});
+  openCats[id] = true;
+  saveData(data); inp.value = ''; render();
+}
+
+function delCat(catId) {
+  const cat = data.cats.find(c => c.id === catId);
+  if (!cat) return;
+  if (!confirm(`確定要刪除類別「${cat.name}」嗎？\n此動作無法復原。`)) return;
+  data.cats = data.cats.filter(c => c.id !== catId);
+  saveData(data); render();
+}
+
+function addSubcat(catId) {
+  const inp = document.getElementById('sinp_' + catId);
+  const name = inp.value.trim();
+  if (!name) return;
+  const cat = data.cats.find(c => c.id === catId);
+  if (cat.subcats.some(s => s.name === name)) {
+    alert('⚠️ 已有該名稱類別，請換個名稱。');
+    return;
+  }
+  const id = 'sub_' + Date.now();
+  cat.subcats.push({id, name, items:[]});
+  openSubcats[id] = true;
+  saveData(data); inp.value = ''; render();
+}
+
+function addSubcatPreset(catId) {
+  const inp = document.getElementById('sinp_' + catId);
+  const name = inp.value.trim();
+  if (!name) { alert('請先輸入子類別名稱！'); return; }
+  const cat = data.cats.find(c => c.id === catId);
+  if (cat.subcats.some(s => s.name === name)) {
+    alert('⚠️ 已有該名稱類別，請換個名稱。');
+    return;
+  }
+  const id = 'sub_' + Date.now();
+  const items = ['紅','黃','青','紫','白','粉','岩','冰'].map((clr, i) => ({
+    id: 'item_' + Date.now() + '_' + i,
+    name: clr + ' 皮克敏',
+    status: 0, dups: 0
+  }));
+  cat.subcats.push({id, name, items});
+  openSubcats[id] = true;
+  saveData(data); inp.value = ''; render();
+}
+
+function delSubcat(catId, subcatId) {
+  const cat = data.cats.find(c => c.id === catId);
+  const sub = cat && cat.subcats.find(s => s.id === subcatId);
+  if (!sub) return;
+  if (!confirm(`確定要刪除子類別「${sub.name}」嗎？\n此動作無法復原。`)) return;
+  cat.subcats = cat.subcats.filter(s => s.id !== subcatId);
+  saveData(data); render();
+}
+
+function addItem(catId, subcatId) {
+  const inp = document.getElementById('iinp_' + subcatId);
+  const name = inp.value.trim();
+  if (!name) return;
+  const cat = data.cats.find(c => c.id === catId);
+  const sub = cat && cat.subcats.find(s => s.id === subcatId);
+  if (!sub) return;
+  sub.items.push({id:'item_'+Date.now()+'_'+Math.random(), name, status:0, dups:0});
+  saveData(data); inp.value = ''; render();
+}
+
+function delItem(catId, subcatId, itemId) {
+  const cat = data.cats.find(c => c.id === catId);
+  const sub = cat && cat.subcats.find(s => s.id === subcatId);
+  if (!sub) return;
+  const item = sub.items.find(i => i.id === itemId);
+  if (!item) return;
+  if (!confirm(`確定要刪除「${item.name}」嗎？\n此動作無法復原。`)) return;
+  sub.items = sub.items.filter(i => i.id !== itemId);
+  saveData(data); render();
+}
+
+/* ══════════════════════════════════════════════
+   狀態 ← → 數量 連動邏輯
+══════════════════════════════════════════════ */
+function cycleStatus(catId, subcatId, itemId) {
+  const cat = data.cats.find(c => c.id === catId);
+  const sub = cat && cat.subcats.find(s => s.id === subcatId);
+  const item = sub && sub.items.find(i => i.id === itemId);
+  if (!item) return;
+
+  item.status = (item.status + 1) % 4;
+
+  // 切到非「未擁有」狀態時，若數量為 0 → 自動設為 1
+  if (item.status > 0 && (item.dups === 0 || item.dups === undefined)) {
+    item.dups = 1;
+  }
+  // 切回「未擁有」時，數量歸零
+  if (item.status === 0) {
+    item.dups = 0;
+  }
+
+  saveData(data); render();
+}
+
+function changeDup(catId, subcatId, itemId, delta) {
+  const cat = data.cats.find(c => c.id === catId);
+  const sub = cat && cat.subcats.find(s => s.id === subcatId);
+  const item = sub && sub.items.find(i => i.id === itemId);
+  if (!item) return;
+
+  const newDups = Math.max(0, (item.dups || 0) + delta);
+  item.dups = newDups;
+
+  // 數量降到 0 → 自動切回未擁有
+  if (newDups === 0) {
+    item.status = 0;
+  }
+  // 數量從 0 增加、但狀態仍是未擁有 → 自動切到花盆
+  if (newDups > 0 && item.status === 0) {
+    item.status = 1;
+  }
+
+  saveData(data); render();
+}
+
+function injectColor(subcatId, label) {
+  const inp = document.getElementById('iinp_' + subcatId);
+  if (!inp) return;
+  const v = inp.value, cur = inp.selectionStart != null ? inp.selectionStart : v.length;
+  inp.value = v.slice(0, cur) + label + v.slice(cur);
+  inp.focus();
+  inp.selectionStart = inp.selectionEnd = cur + label.length;
+}
+
+/* ══════════════════════════════════════════════
+   統計計算（以 dups 為實際數量）
+══════════════════════════════════════════════ */
+function calcStats(items) {
+  // 種類：有任何數量就算一種
+  const pin    = items.filter(i => i.status === 3).length;
+  const normal = items.filter(i => i.status === 2).length;
+  const flower = items.filter(i => i.status === 1).length;
+  const none   = items.filter(i => i.status === 0).length;
+  // 實際總量：直接讀 dups（dups=隻數，狀態>0時 dups>=1）
+  const pinQty    = items.filter(i => i.status === 3).reduce((a,i) => a + (i.dups||0), 0);
+  const normalQty = items.filter(i => i.status === 2).reduce((a,i) => a + (i.dups||0), 0);
+  const flowerQty = items.filter(i => i.status === 1).reduce((a,i) => a + (i.dups||0), 0);
+  return {pin, normal, flower, none, pinQty, normalQty, flowerQty};
+}
+
+function globalStats() {
+  const all = [];
+  data.cats.forEach(cat => cat.subcats.forEach(sub => all.push(...sub.items)));
+  return calcStats(all);
+}
+
+/* ══════════════════════════════════════════════
+   拖曳排序（修復大類別拖曳）
+   策略：handle 觸發，抓取父層 .category/.subcat/.item-row
+   指示線：drag-over-top / drag-over-bot
+══════════════════════════════════════════════ */
+let drag = null;
+
+function bindDrag(handle, type, catId, subcatId, itemId) {
+  const startDrag = e => {
+    const parentEl = handle.closest('.category, .subcat, .item-row');
+    if (!parentEl) return;
+    const touch = e.touches ? e.touches[0] : e;
+    const rect = parentEl.getBoundingClientRect();
+
+    // 建立浮動幽靈
+    const ghost = parentEl.cloneNode(true);
+    ghost.style.cssText = [
+      'position:fixed',
+      `left:${rect.left}px`,
+      `top:${rect.top}px`,
+      `width:${rect.width}px`,
+      'opacity:0.8',
+      'pointer-events:none',
+      'z-index:9999',
+      'border-radius:12px',
+      'box-shadow:0 4px 20px rgba(0,0,0,0.6)'
+    ].join(';');
+    document.body.appendChild(ghost);
+    parentEl.classList.add('dragging');
+
+    // 找到父容器
+    let listEl;
+    if      (type === 'cat')    listEl = document.getElementById('catList');
+    else if (type === 'subcat') listEl = document.getElementById('sublist_' + catId);
+    else                        listEl = document.getElementById('itemlist_' + subcatId);
+
+    drag = {
+      type, catId, subcatId, itemId,
+      el: parentEl, ghost, listEl,
+      offsetY: touch.clientY - rect.top
+    };
+    e.preventDefault();
+  };
+
+  handle.addEventListener('touchstart', startDrag, {passive:false});
+  handle.addEventListener('mousedown', e => { if (e.button === 0) startDrag(e); });
+}
+
+function clearDragOverClasses() {
+  document.querySelectorAll('.drag-over-top,.drag-over-bot').forEach(el => {
+    el.classList.remove('drag-over-top','drag-over-bot');
+  });
+}
+
+function getDragTarget(listEl, y) {
+  // 從 listEl 直接子元素中找到被 hover 的目標及位置
+  for (const child of listEl.children) {
+    if (child === drag.el) continue;
+    // skip non-data nodes (e.g. add-area divs without data-id)
+    if (!child.dataset.id) continue;
+    const r = child.getBoundingClientRect();
+    if (y >= r.top && y <= r.bottom) {
+      const half = r.top + r.height / 2;
+      return {el: child, before: y < half};
+    }
+  }
+  return null;
+}
+
+document.addEventListener('touchmove', e => {
+  if (!drag) return;
+  e.preventDefault();
+  const y = e.touches[0].clientY;
+  drag.ghost.style.top = (y - drag.offsetY) + 'px';
+  clearDragOverClasses();
+  const t = getDragTarget(drag.listEl, y);
+  if (t) t.el.classList.add(t.before ? 'drag-over-top' : 'drag-over-bot');
+}, {passive:false});
+
+document.addEventListener('mousemove', e => {
+  if (!drag) return;
+  drag.ghost.style.top = (e.clientY - drag.offsetY) + 'px';
+  clearDragOverClasses();
+  const t = getDragTarget(drag.listEl, e.clientY);
+  if (t) t.el.classList.add(t.before ? 'drag-over-top' : 'drag-over-bot');
+});
+
+function finishDrag(y) {
+  if (!drag) return;
+  drag.el.classList.remove('dragging');
+  drag.ghost.remove();
+  clearDragOverClasses();
+
+  const t = getDragTarget(drag.listEl, y);
+  if (t) {
+    const {type, catId, subcatId, itemId} = drag;
+    const toId = t.el.dataset.id;
+
+    const moveInArray = (arr, fromId, toId, before) => {
+      const fi = arr.findIndex(x => x.id === fromId);
+      const ti = arr.findIndex(x => x.id === toId);
+      if (fi < 0 || ti < 0 || fi === ti) return;
+      const [item] = arr.splice(fi, 1);
+      const newTi = arr.findIndex(x => x.id === toId);
+      arr.splice(before ? newTi : newTi + 1, 0, item);
+    };
+
+    if (type === 'cat') {
+      moveInArray(data.cats, itemId, toId, t.before);
+    } else if (type === 'subcat') {
+      const cat = data.cats.find(c => c.id === catId);
+      if (cat) moveInArray(cat.subcats, itemId, toId, t.before);
+    } else {
+      const cat = data.cats.find(c => c.id === catId);
+      const sub = cat && cat.subcats.find(s => s.id === subcatId);
+      if (sub) moveInArray(sub.items, itemId, toId, t.before);
+    }
+    saveData(data);
+  }
+  drag = null;
+  render();
+}
+
+document.addEventListener('touchend',  e => finishDrag(e.changedTouches[0].clientY));
+document.addEventListener('mouseup',   e => finishDrag(e.clientY));
+
+/* ══════════════════════════════════════════════
+   渲染
+══════════════════════════════════════════════ */
+function esc(s) {
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function renderStats() {
+  const gs = globalStats();
+  document.getElementById('statsBar').innerHTML = `
+    <div class="stat-pill"><span>${gs.pin}</span>✨ 飾品種<small>${gs.pinQty}隻</small></div>
+    <div class="stat-pill"><span>${gs.normal}</span>🌿 普通種<small>${gs.normalQty}隻</small></div>
+    <div class="stat-pill"><span>${gs.flower}</span>🪴 花盆種<small>${gs.flowerQty}個</small></div>
+    <div class="stat-pill"><span>${gs.none}</span>— 未取得</div>
+  `;
+}
+
+function render() {
+  initOpen();
+  renderStats();
+
+  const q = (document.getElementById('searchInput').value || '').toLowerCase().trim();
+  const catList = document.getElementById('catList');
+
+  // 搜尋過濾
+  const visible = data.cats.map(cat => {
+    const mc = cat.name.toLowerCase().includes(q);
+    const subs = cat.subcats.map(sub => {
+      const ms = sub.name.toLowerCase().includes(q);
+      const items = sub.items.filter(item =>
+        mc || ms || item.name.toLowerCase().includes(q)
+      );
+      return {sub, items, show: mc || ms || items.length > 0};
+    }).filter(x => x.show);
+    return {cat, subs, show: !q || mc || subs.length > 0};
+  }).filter(x => x.show);
+
+  if (q && visible.length === 0) {
+    catList.innerHTML = '<div class="no-result">🔍 找不到資料</div>';
+    return;
+  }
+
+  let html = '';
+
+  visible.forEach(({cat, subs}) => {
+    const isOpen = openCats[cat.id] !== false;
+    const allItems = cat.subcats.flatMap(s => s.items);
+    const cs = calcStats(allItems);
+    const statStr = `✨${cs.pin}(${cs.pinQty}隻) 🌿${cs.normal}(${cs.normalQty}) 🪴${cs.flower}(${cs.flowerQty}) —${cs.none}`;
+
+    html += `<div class="category" data-id="${esc(cat.id)}">
+      <div class="cat-header">
+        <span class="drag-handle" data-dtype="cat" data-id="${esc(cat.id)}">⠿</span>
+        <div class="cat-header-info" onclick="toggleCat('${esc(cat.id)}')">
+          <div class="cat-title">${esc(cat.name)}</div>
+          <div class="cat-stats">${statStr}</div>
+        </div>
+        <div class="cat-header-btns">
+          <button class="icon-btn del" onclick="delCat('${esc(cat.id)}')">🗑</button>
+          <button class="icon-btn arr ${isOpen?'open':''}" onclick="toggleCat('${esc(cat.id)}')">▶</button>
+        </div>
+      </div>`;
+
+    if (isOpen) {
+      html += `<div class="cat-body"><div id="sublist_${esc(cat.id)}">`;
+
+      subs.forEach(({sub, items: filteredItems}) => {
+        const subOpen = openSubcats[sub.id] !== false;
+        const ss = calcStats(sub.items);
+        const ssStr = `✨${ss.pin}(${ss.pinQty}) 🌿${ss.normal}(${ss.normalQty}) 🪴${ss.flower}(${ss.flowerQty}) —${ss.none}`;
+
+        html += `<div class="subcat" data-id="${esc(sub.id)}">
+          <div class="subcat-header">
+            <span class="subcat-handle" data-dtype="subcat" data-catid="${esc(cat.id)}" data-id="${esc(sub.id)}">⠿</span>
+            <div class="subcat-header-info" onclick="toggleSubcat('${esc(sub.id)}')">
+              <div class="subcat-title">${esc(sub.name)}</div>
+              <div class="subcat-stats">${ssStr}</div>
+            </div>
+            <div class="subcat-header-btns">
+              <button class="subcat-del" onclick="delSubcat('${esc(cat.id)}','${esc(sub.id)}')">🗑</button>
+              <button class="subcat-arr ${subOpen?'open':''}" onclick="toggleSubcat('${esc(sub.id)}')">▶</button>
+            </div>
+          </div>`;
+
+        if (subOpen) {
+          html += `<div class="subcat-body"><div id="itemlist_${esc(sub.id)}">`;
+
+          if (filteredItems.length === 0) {
+            html += `<div class="empty-hint">尚無項目</div>`;
+          }
+
+          filteredItems.forEach(item => {
+            const sd = STATUS_DEF[item.status] || STATUS_DEF[0];
+            html += `<div class="item-row" data-id="${esc(item.id)}">
+              <span class="item-handle" data-dtype="item" data-catid="${esc(cat.id)}" data-subid="${esc(sub.id)}" data-id="${esc(item.id)}">⠿</span>
+              <button class="status-btn ${sd.cls}" onclick="cycleStatus('${esc(cat.id)}','${esc(sub.id)}','${esc(item.id)}')">
+                <span class="sico">${sd.ico}</span>
+                <span class="slbl">${sd.lbl}</span>
+              </button>
+              <span class="item-name">${esc(item.name)}</span>
+              <div class="dup-ctrl">
+                <button class="dup-btn" onclick="changeDup('${esc(cat.id)}','${esc(sub.id)}','${esc(item.id)}',-1)">－</button>
+                <span class="dup-count">${item.dups||0}</span>
+                <button class="dup-btn" onclick="changeDup('${esc(cat.id)}','${esc(sub.id)}','${esc(item.id)}',1)">＋</button>
+              </div>
+              <button class="item-del" onclick="delItem('${esc(cat.id)}','${esc(sub.id)}','${esc(item.id)}')">✕</button>
+            </div>`;
+          });
+
+          html += `</div>
+            <div class="add-item-area">
+              <div class="add-item-row">
+                <input id="iinp_${esc(sub.id)}" placeholder="皮克敏名稱" onkeydown="if(event.key==='Enter')addItem('${esc(cat.id)}','${esc(sub.id)}')">
+                <button class="btn-add-item" onclick="addItem('${esc(cat.id)}','${esc(sub.id)}')">新增</button>
+              </div>
+              <div class="color-tags">
+                ${COLORS.map(c=>`<button class="color-tag" style="background:${c.bg};color:${c.color}" onclick="injectColor('${esc(sub.id)}','${c.label}')">${c.label}</button>`).join('')}
+              </div>
+            </div>
+          </div>`;
+        }
+        html += `</div>`; // .subcat
+      });
+
+      html += `</div>
+        <div class="add-subcat-area">
+          <div class="add-subcat-row">
+            <input id="sinp_${esc(cat.id)}" placeholder="新增子類別名稱（如：廚師帽子）" onkeydown="if(event.key==='Enter')addSubcat('${esc(cat.id)}')">
+            <button class="btn-add-subcat" onclick="addSubcat('${esc(cat.id)}')">新增</button>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px">
+            <button class="btn-preset" onclick="addSubcatPreset('${esc(cat.id)}')">⚡ 一鍵預設 8 色</button>
+          </div>
+        </div>
+      </div>`; // .cat-body
+    }
+    html += `</div>`; // .category
+  });
+
+  catList.innerHTML = html;
+
+  /* 重新綁定拖曳 handles */
+  catList.querySelectorAll('[data-dtype]').forEach(handle => {
+    const dtype  = handle.dataset.dtype;
+    const id     = handle.dataset.id;
+    const catId  = handle.dataset.catid || null;
+    const subId  = handle.dataset.subid || null;
+    bindDrag(handle, dtype, catId, subId, id);
+  });
+}
+
+/* ══════════════════════════════════════════════
+   初始化 Demo 資料
+══════════════════════════════════════════════ */
+if (data.cats.length === 0) {
+  data.cats = [
+    {
+      id:'cat_demo1', name:'餐廳系列',
+      subcats:[
+        {id:'sub_d1', name:'廚師帽子', items:[
+          {id:'i1',name:'紅 皮克敏', status:3, dups:2},
+          {id:'i2',name:'黃 皮克敏', status:2, dups:1},
+          {id:'i3',name:'青 皮克敏', status:1, dups:1},
+          {id:'i4',name:'紫 皮克敏', status:0, dups:0},
+          {id:'i5',name:'白 皮克敏', status:0, dups:0},
+          {id:'i6',name:'粉 皮克敏', status:0, dups:0},
+          {id:'i7',name:'岩 皮克敏', status:0, dups:0},
+          {id:'i8',name:'冰 皮克敏', status:0, dups:0}
+        ]},
+        {id:'sub_d2', name:'圍裙', items:[
+          {id:'i9', name:'紅 皮克敏', status:1, dups:1},
+          {id:'i10',name:'黃 皮克敏', status:0, dups:0}
+        ]}
+      ]
+    },
+    {
+      id:'cat_demo2', name:'雨天系列',
+      subcats:[
+        {id:'sub_d3', name:'雨衣款', items:[
+          {id:'i11',name:'青 皮克敏 A', status:3, dups:1},
+          {id:'i12',name:'青 皮克敏 B', status:1, dups:1},
+          {id:'i13',name:'紫 皮克敏',   status:0, dups:0}
+        ]}
+      ]
+    }
+  ];
+  saveData(data);
+  initOpen();
+}
+
+render();
+</script>
+</body>
+</html>
