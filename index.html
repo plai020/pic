@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>皮克敏全能收集助手 v4</title>
+<title>皮克敏全能收集助手 v5.1</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body{font-family:system-ui,sans-serif;background:#111;color:#eee;overscroll-behavior:none}
@@ -149,15 +149,11 @@ body{font-family:system-ui,sans-serif;background:#111;color:#eee;overscroll-beha
 .s2{background:#382d15;color:#ddaa44}
 .s3{background:#2d1850;color:#bb77ff}
 
-/* 項目名稱 — 靜態 / 編輯中 */
-.item-name-wrap{flex:1;min-width:0;display:flex;align-items:center;gap:5px}
-.item-name{font-size:13px;color:#ccc;line-height:1.3;word-break:break-all;cursor:pointer;flex:1}
-.item-name:hover{color:#fff}
-.item-name-input{flex:1;background:#1e1e1e;border:1px solid #5599ee;border-radius:8px;padding:5px 8px;color:#eee;font-size:13px;outline:none;min-width:0}
-.item-edit-btn{background:none;border:none;color:#3a5a7a;font-size:14px;cursor:pointer;padding:3px;flex-shrink:0;line-height:1}
-.item-edit-btn:active{color:#77aadd;transform:scale(0.85)}
-.item-save-btn{background:#1a3a1a;border:1px solid #336633;color:#66dd66;font-size:12px;border-radius:7px;padding:4px 8px;cursor:pointer;flex-shrink:0;font-weight:500}
-.item-save-btn:active{background:#122a12;transform:scale(0.92)}
+/* 項目名稱 */
+.item-name-wrap{flex:1;min-width:0;display:flex;align-items:center;gap:4px}
+.item-name{font-size:13px;color:#ccc;line-height:1.3;word-break:break-all;flex:1}
+.item-edit-btn{background:none;border:none;color:#3a5570;font-size:13px;cursor:pointer;padding:3px 4px;flex-shrink:0;line-height:1;transition:transform 0.1s}
+.item-edit-btn:active{color:#77aadd;transform:scale(0.82)}
 
 /* 數量控制 */
 .dup-ctrl{display:flex;align-items:center;gap:4px;flex-shrink:0}
@@ -345,8 +341,6 @@ let data = loadData();
 let openCats    = {};
 let openSubcats = {};
 let allExpanded = true;
-// 正在編輯的項目 id（行內編輯）
-let editingItemId = null;
 
 /* ── 遷移 & 補齊預設值（v3.x → v4，向下相容）── */
 function migrateData(d) {
@@ -481,29 +475,36 @@ document.querySelectorAll('.modal-overlay').forEach(o =>
 );
 
 /* ═══════════════════════════════════════════════════
-   編輯 Modal（類別 / 子類別名稱）
+   編輯 Modal（類別 / 子類別 / 皮克敏項目 名稱）
 ═══════════════════════════════════════════════════ */
-let editCtx = null; // {type:'cat'|'subcat', catId, subcatId}
+let editCtx = null; // {type:'cat'|'subcat'|'item', catId, subcatId, itemId}
 
-function openEditModal(type, catId, subcatId) {
-  editCtx = {type, catId, subcatId};
+function openEditModal(type, catId, subcatId, itemId) {
+  editCtx = {type, catId, subcatId, itemId: itemId || null};
   let currentName = '';
   if (type === 'cat') {
     const cat = data.cats.find(c => c.id === catId);
     currentName = cat ? cat.name : '';
     document.getElementById('editModalTitle').textContent = '✏️ 修改類別名稱';
-  } else {
+  } else if (type === 'subcat') {
     const cat = data.cats.find(c => c.id === catId);
     const sub = cat && cat.subcats.find(s => s.id === subcatId);
     currentName = sub ? sub.name : '';
     document.getElementById('editModalTitle').textContent = '✏️ 修改子類別名稱';
+  } else {
+    // type === 'item'
+    const cat  = data.cats.find(c => c.id === catId);
+    const sub  = cat && cat.subcats.find(s => s.id === subcatId);
+    const item = sub && sub.items.find(i => i.id === itemId);
+    currentName = item ? item.name : '';
+    document.getElementById('editModalTitle').textContent = '✏️ 修改項目名稱';
   }
   const inp = document.getElementById('editInput');
   inp.value = currentName;
   document.getElementById('editError').textContent = '';
   document.getElementById('editError').classList.remove('show');
   document.getElementById('editModal').classList.add('active');
-  setTimeout(() => inp.focus(), 80);
+  setTimeout(() => { inp.focus(); inp.select(); }, 80);
 }
 
 function saveEdit() {
@@ -518,7 +519,7 @@ function saveEdit() {
     if (isDup) { errEl.textContent = '⚠️ 已有該名稱類別，請換個名稱。'; errEl.classList.add('show'); return; }
     const cat = data.cats.find(c => c.id === editCtx.catId);
     if (cat) cat.name = newName;
-  } else {
+  } else if (editCtx.type === 'subcat') {
     const cat = data.cats.find(c => c.id === editCtx.catId);
     if (cat) {
       const isDup = cat.subcats.some(s => s.name === newName && s.id !== editCtx.subcatId);
@@ -526,42 +527,16 @@ function saveEdit() {
       const sub = cat.subcats.find(s => s.id === editCtx.subcatId);
       if (sub) sub.name = newName;
     }
+  } else {
+    // type === 'item'
+    const cat  = data.cats.find(c => c.id === editCtx.catId);
+    const sub  = cat && cat.subcats.find(s => s.id === editCtx.subcatId);
+    const item = sub && sub.items.find(i => i.id === editCtx.itemId);
+    if (item) item.name = newName;
   }
   saveData(data);
   closeModal('editModal');
   editCtx = null;
-  render();
-}
-
-/* ═══════════════════════════════════════════════════
-   行內編輯（項目名稱）
-═══════════════════════════════════════════════════ */
-function startItemEdit(itemId) {
-  editingItemId = itemId;
-  render();
-  // 聚焦
-  setTimeout(() => {
-    const inp = document.getElementById('item_edit_' + itemId);
-    if (inp) { inp.focus(); inp.select(); }
-  }, 40);
-}
-
-function saveItemEdit(catId, subcatId, itemId) {
-  const inp = document.getElementById('item_edit_' + itemId);
-  if (!inp) return;
-  const newName = inp.value.trim();
-  if (!newName) return;
-  const cat  = data.cats.find(c => c.id === catId);
-  const sub  = cat && cat.subcats.find(s => s.id === subcatId);
-  const item = sub && sub.items.find(i => i.id === itemId);
-  if (item) item.name = newName;
-  saveData(data);
-  editingItemId = null;
-  render();
-}
-
-function cancelItemEdit() {
-  editingItemId = null;
   render();
 }
 
@@ -604,7 +579,7 @@ function addSubcatPreset(catId) {
   if (cat.subcats.some(s => s.name === name)) { alert('⚠️ 已有該名稱類別，請換個名稱。'); return; }
   const id = 'sub_' + Date.now();
   const items = ['紅','黃','青','紫','白','粉','岩','冰'].map((clr, i) => ({
-    id:'item_' + Date.now() + '_' + i, name: clr + ' 皮克敏', status:0, dups:0
+    id:'item_' + Date.now() + '_' + i, name: clr, status:0, dups:0
   }));
   cat.subcats.push({id, name, items});
   openSubcats[id] = true;
@@ -635,7 +610,6 @@ function delItem(catId, subcatId, itemId) {
   if (!item) return;
   if (!confirm(`確定要刪除「${item.name}」嗎？\n此動作無法復原。`)) return;
   sub.items = sub.items.filter(i => i.id !== itemId);
-  if (editingItemId === itemId) editingItemId = null;
   saveData(data); render();
 }
 
@@ -878,18 +852,11 @@ function render() {
           if (fi.length === 0) html += `<div class="empty-hint">尚無項目</div>`;
 
           fi.forEach(item => {
-            const sd        = STATUS_DEF[item.status] || STATUS_DEF[0];
-            const isEditing = editingItemId === item.id;
+            const sd = STATUS_DEF[item.status] || STATUS_DEF[0];
 
-            const nameCell = isEditing
-              ? `<div class="item-name-wrap">
-                   <input id="item_edit_${esc(item.id)}" class="item-name-input" value="${esc(item.name)}"
-                     onkeydown="if(event.key==='Enter')saveItemEdit('${esc(cat.id)}','${esc(sub.id)}','${esc(item.id)}');if(event.key==='Escape')cancelItemEdit()">
-                   <button class="item-save-btn" onclick="saveItemEdit('${esc(cat.id)}','${esc(sub.id)}','${esc(item.id)}')">儲存</button>
-                 </div>`
-              : `<div class="item-name-wrap">
-                   <span class="item-name" onclick="startItemEdit('${esc(item.id)}')">${esc(item.name)}</span>
-                   <button class="item-edit-btn" onclick="startItemEdit('${esc(item.id)}')">✏️</button>
+            const nameCell = `<div class="item-name-wrap">
+                   <span class="item-name">${esc(item.name)}</span>
+                   <button class="item-edit-btn" onclick="openEditModal('item','${esc(cat.id)}','${esc(sub.id)}','${esc(item.id)}')">✏️</button>
                  </div>`;
 
             html += `<div class="item-row" data-id="${esc(item.id)}">
