@@ -3,36 +3,43 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>皮克敏全能收集助手</title>
+<title>皮克敏全能收集助手 v4</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body{font-family:system-ui,sans-serif;background:#111;color:#eee;overscroll-behavior:none}
 #app{min-height:100vh;padding:12px;max-width:640px;margin:0 auto}
 
-/* ── 頂部列 ── */
+/* ══ 頂部 ══ */
 .top-bar{display:flex;align-items:center;justify-content:space-between;padding:10px 2px 8px}
 .top-bar h1{font-size:20px;font-weight:500;color:#fff}
 .btn-toggle-all{background:#252525;border:1px solid #444;color:#aaa;border-radius:9px;padding:7px 13px;font-size:12px;cursor:pointer;white-space:nowrap}
 .btn-toggle-all:active{background:#333;color:#fff}
 
-/* ── 統計列 ── */
-.stats-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px}
+/* ══ 統計列 ══ */
+.stats-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px}
 .stat-pill{background:#1a1a1a;border-radius:10px;padding:7px 4px;font-size:11px;color:#888;text-align:center;line-height:1.5}
 .stat-pill span{display:block;font-size:16px;font-weight:500;color:#eee;line-height:1.3}
 .stat-pill small{font-size:10px;color:#555}
 
-/* ── 備份列 ── */
+/* ══ 全域進度條 ══ */
+.global-progress{background:#1a1a1a;border-radius:11px;padding:11px 14px;margin-bottom:10px;display:flex;align-items:center;gap:10px}
+.global-progress-label{font-size:12px;color:#888;white-space:nowrap;flex-shrink:0}
+.progress-track{flex:1;height:8px;background:#2a2a2a;border-radius:99px;overflow:hidden}
+.progress-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,#33cc88,#55eeaa);transition:width 0.4s ease}
+.progress-pct{font-size:13px;font-weight:500;color:#55ddaa;white-space:nowrap;flex-shrink:0;min-width:36px;text-align:right}
+
+/* ══ 備份列 ══ */
 .backup-row{display:flex;gap:8px;margin-bottom:10px}
-.btn-backup{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:11px 10px;border-radius:11px;border:1px solid;font-size:14px;font-weight:500;cursor:pointer;transition:transform 0.1s,opacity 0.15s;white-space:nowrap}
+.btn-backup{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;border-radius:11px;border:1px solid;font-size:13px;font-weight:500;cursor:pointer;transition:transform 0.1s,opacity 0.15s;white-space:nowrap}
 .btn-backup:active{transform:scale(0.94);opacity:0.8}
 .btn-export{background:#152a1a;border-color:#255535;color:#66cc88}
 .btn-import{background:#1a1a2a;border-color:#334488;color:#88aaee}
 
-/* ── 搜尋 ── */
+/* ══ 搜尋 ══ */
 .search-bar{width:100%;background:#1e1e1e;border:1px solid #3a3a3a;border-radius:11px;padding:11px 14px;color:#eee;font-size:15px;margin-bottom:10px;outline:none}
 .search-bar:focus{border-color:#5599ee}
 
-/* ── 新增類別 ── */
+/* ══ 新增類別 ══ */
 .add-cat-row{display:flex;gap:8px;margin-bottom:14px}
 .add-cat-row input{flex:1;background:#1e1e1e;border:1px solid #3a3a3a;border-radius:11px;padding:11px 14px;color:#eee;font-size:14px;outline:none}
 .add-cat-row input:focus{border-color:#5599ee}
@@ -41,52 +48,17 @@ body{font-family:system-ui,sans-serif;background:#111;color:#eee;overscroll-beha
 
 .no-result{text-align:center;padding:40px 0;color:#555;font-size:15px}
 
-/* ══ 備份 Modal ══ */
-.modal-overlay{
-  display:none;
-  position:fixed;inset:0;
-  background:rgba(0,0,0,0.75);
-  z-index:10000;
-  align-items:center;justify-content:center;
-  padding:16px;
-}
+/* ══ Modal (backup + edit) ══ */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.78);z-index:10000;align-items:center;justify-content:center;padding:16px}
 .modal-overlay.active{display:flex}
-.modal-box{
-  background:#1c1c1c;
-  border:1px solid #333;
-  border-radius:16px;
-  padding:20px 18px;
-  width:100%;max-width:520px;
-  max-height:90vh;
-  overflow-y:auto;
-  display:flex;flex-direction:column;gap:14px;
-}
+.modal-box{background:#1c1c1c;border:1px solid #333;border-radius:16px;padding:20px 18px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;display:flex;flex-direction:column;gap:14px}
 .modal-title{font-size:16px;font-weight:500;color:#fff}
-.modal-desc{font-size:13px;color:#888;line-height:1.5}
-
-/* 匯出文字區 */
-.export-textarea{
-  width:100%;min-height:140px;max-height:260px;
-  background:#111;border:1px solid #333;border-radius:10px;
-  padding:10px 12px;color:#99cc99;font-size:12px;
-  font-family:monospace;line-height:1.5;
-  resize:vertical;outline:none;
-}
-
-/* 匯入文字區 */
-.import-textarea{
-  width:100%;min-height:140px;max-height:260px;
-  background:#111;border:1px solid #333;border-radius:10px;
-  padding:10px 12px;color:#aaccff;font-size:12px;
-  font-family:monospace;line-height:1.5;
-  resize:vertical;outline:none;
-}
+.modal-desc{font-size:13px;color:#777;line-height:1.5}
+.export-textarea{width:100%;min-height:140px;max-height:260px;background:#111;border:1px solid #333;border-radius:10px;padding:10px 12px;color:#99cc99;font-size:12px;font-family:monospace;line-height:1.5;resize:vertical;outline:none}
+.import-textarea{width:100%;min-height:140px;max-height:260px;background:#111;border:1px solid #333;border-radius:10px;padding:10px 12px;color:#aaccff;font-size:12px;font-family:monospace;line-height:1.5;resize:vertical;outline:none}
 .import-textarea:focus{border-color:#5599ee}
-
 .modal-error{font-size:12px;color:#ff6655;background:#2a1010;border-radius:8px;padding:8px 12px;display:none}
 .modal-error.show{display:block}
-
-/* modal 按鈕組 */
 .modal-btns{display:flex;gap:8px;flex-wrap:wrap}
 .modal-btn{flex:1;padding:11px 10px;border-radius:10px;border:1px solid;font-size:14px;font-weight:500;cursor:pointer;transition:transform 0.1s,opacity 0.15s;white-space:nowrap;min-width:80px;text-align:center}
 .modal-btn:active{transform:scale(0.93);opacity:0.8}
@@ -94,55 +66,72 @@ body{font-family:system-ui,sans-serif;background:#111;color:#eee;overscroll-beha
 .modal-btn-secondary{background:#252525;border-color:#444;color:#aaa}
 .modal-btn-copy{background:#1e3a55;border-color:#2a5077;color:#77aaee}
 .modal-btn-danger{background:#3a1515;border-color:#5a2222;color:#ee7766}
-
-/* 複製成功提示 */
-.copy-toast{
-  font-size:12px;color:#55cc77;
-  background:#0e2015;border-radius:7px;
-  padding:7px 12px;text-align:center;
-  display:none;
-}
+.copy-toast{font-size:12px;color:#55cc77;background:#0e2015;border-radius:7px;padding:7px 12px;text-align:center;display:none}
 .copy-toast.show{display:block}
 
-/* ── 大類別 ── */
+/* ── Edit modal input ── */
+.edit-input{width:100%;background:#111;border:1px solid #444;border-radius:10px;padding:11px 13px;color:#eee;font-size:15px;outline:none}
+.edit-input:focus{border-color:#5599ee}
+
+/* ══ 大類別 ══ */
 .category{background:#1a1a1a;border-radius:14px;margin-bottom:12px;border:1px solid #2a2a2a}
 .category.dragging{opacity:0.35;border:1.5px dashed #5599ee}
 .category.drag-over-top{border-top:3px solid #5599ee}
 .category.drag-over-bot{border-bottom:3px solid #5599ee}
-.cat-header{display:flex;align-items:center;padding:11px 8px 11px 10px;background:#222;border-radius:13px;gap:4px;user-select:none}
+
+.cat-header{display:flex;align-items:center;padding:10px 8px 0 10px;background:#222;border-radius:13px 13px 0 0;gap:4px;user-select:none}
+.cat-header-open{border-radius:13px}
 .drag-handle{font-size:17px;cursor:grab;padding:4px 7px;flex-shrink:0;touch-action:none;color:#555;line-height:1}
 .drag-handle:active{cursor:grabbing;color:#aaa}
-.cat-header-info{flex:1;cursor:pointer;min-width:0;overflow:hidden;padding:0 2px}
+.cat-header-info{flex:1;cursor:pointer;min-width:0;overflow:hidden;padding:0 2px;padding-bottom:4px}
 .cat-title{font-size:15px;font-weight:500;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.cat-stats{font-size:11px;color:#666;margin-top:2px;line-height:1.4}
-.cat-header-btns{display:flex;align-items:center;gap:14px;flex-shrink:0;padding-right:2px}
-.icon-btn{background:none;border:none;cursor:pointer;font-size:18px;padding:5px;line-height:1;transition:transform 0.1s}
+.cat-stats{font-size:11px;color:#666;margin-top:1px;line-height:1.4}
+.cat-header-btns{display:flex;align-items:center;gap:10px;flex-shrink:0;padding-right:2px;padding-bottom:4px}
+.icon-btn{background:none;border:none;cursor:pointer;font-size:17px;padding:5px;line-height:1;transition:transform 0.1s;flex-shrink:0}
 .icon-btn:active{transform:scale(0.82)}
+.icon-btn.edit{color:#4a6a8a}
+.icon-btn.edit:active{color:#88bbee}
 .icon-btn.del{color:#5a3333}
 .icon-btn.del:active{color:#ff5555}
-.icon-btn.arr{color:#555;font-size:14px;transition:transform 0.2s,color 0.1s}
+.icon-btn.arr{color:#555;font-size:13px;transition:transform 0.2s}
 .icon-btn.arr.open{transform:rotate(90deg)}
+
+/* 類別進度條（貼在 header 底部）*/
+.cat-progress-bar{height:4px;background:#2a2a2a;border-radius:0 0 13px 13px;overflow:hidden;margin:0}
+.cat-progress-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,#2288aa,#44ccee);transition:width 0.4s ease}
+.cat-header-closed .cat-progress-bar{border-radius:0 0 13px 13px}
+
 .cat-body{padding:8px 10px 10px}
 
-/* ── 子類別 ── */
-.subcat{background:#1f1f1f;border-radius:12px;margin-bottom:8px;border:1px solid #2d2d2d}
+/* ══ 子類別 ══ */
+.subcat{background:#1f1f1f;border-radius:12px;margin-bottom:8px;border:1px solid #2d2d2d;overflow:hidden}
 .subcat.dragging{opacity:0.35;border:1.5px dashed #44aa77}
 .subcat.drag-over-top{border-top:3px solid #44aa77}
 .subcat.drag-over-bot{border-bottom:3px solid #44aa77}
-.subcat-header{display:flex;align-items:center;padding:9px 7px 9px 8px;gap:3px;user-select:none}
+
+.subcat-header{display:flex;align-items:center;padding:8px 6px 0 8px;gap:3px;user-select:none}
 .subcat-handle{font-size:15px;cursor:grab;padding:3px 6px;flex-shrink:0;touch-action:none;color:#444;line-height:1}
 .subcat-handle:active{cursor:grabbing;color:#888}
-.subcat-header-info{flex:1;cursor:pointer;min-width:0;padding:0 2px}
+.subcat-header-info{flex:1;cursor:pointer;min-width:0;padding:0 2px;padding-bottom:3px}
 .subcat-title{font-size:14px;font-weight:500;color:#bbb;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.subcat-stats{font-size:11px;color:#555;margin-top:1px}
-.subcat-header-btns{display:flex;align-items:center;gap:12px;flex-shrink:0;padding-right:2px}
-.subcat-del{background:none;border:none;color:#442222;font-size:16px;cursor:pointer;padding:5px;line-height:1}
-.subcat-del:active{color:#ff5555;transform:scale(0.82)}
-.subcat-arr{background:none;border:none;color:#484848;font-size:12px;padding:5px;cursor:pointer;transition:transform 0.2s}
-.subcat-arr.open{transform:rotate(90deg)}
+.subcat-stats{font-size:10px;color:#555;margin-top:1px}
+.subcat-header-btns{display:flex;align-items:center;gap:9px;flex-shrink:0;padding-right:2px;padding-bottom:3px}
+.subcat-icon{background:none;border:none;cursor:pointer;font-size:15px;padding:5px;line-height:1;flex-shrink:0;transition:transform 0.1s}
+.subcat-icon:active{transform:scale(0.82)}
+.subcat-icon.edit{color:#3a5a7a}
+.subcat-icon.edit:active{color:#77aadd}
+.subcat-icon.del{color:#442222}
+.subcat-icon.del:active{color:#ff5555}
+.subcat-icon.arr{color:#484848;font-size:11px;transition:transform 0.2s}
+.subcat-icon.arr.open{transform:rotate(90deg)}
+
+/* 子類別進度條 */
+.subcat-progress-bar{height:3px;background:#252525}
+.subcat-progress-fill{height:100%;background:linear-gradient(90deg,#336644,#55aa77);transition:width 0.4s ease}
+
 .subcat-body{padding:6px 8px 8px}
 
-/* ── 項目行 ── */
+/* ══ 項目行 ══ */
 .item-row{background:#272727;border-radius:11px;padding:8px 9px;margin-bottom:6px;display:flex;align-items:center;gap:6px;border:1px solid #303030}
 .item-row.dragging{opacity:0.35;border:1.5px dashed #5599ee}
 .item-row.drag-over-top{border-top:3px solid #5599ee}
@@ -150,7 +139,7 @@ body{font-family:system-ui,sans-serif;background:#111;color:#eee;overscroll-beha
 .item-handle{font-size:14px;cursor:grab;padding:3px 5px;flex-shrink:0;touch-action:none;color:#383838;line-height:1}
 .item-handle:active{cursor:grabbing;color:#888}
 
-/* ── 狀態按鈕 ── */
+/* 狀態按鈕 */
 .status-btn{width:48px;height:48px;border-radius:10px;border:none;cursor:pointer;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:2px;transition:transform 0.12s}
 .status-btn:active{transform:scale(0.83)}
 .status-btn .sico{font-size:16px;line-height:1}
@@ -160,16 +149,26 @@ body{font-family:system-ui,sans-serif;background:#111;color:#eee;overscroll-beha
 .s2{background:#382d15;color:#ddaa44}
 .s3{background:#2d1850;color:#bb77ff}
 
-.item-name{flex:1;font-size:13px;color:#ccc;line-height:1.3;word-break:break-all;min-width:0}
+/* 項目名稱 — 靜態 / 編輯中 */
+.item-name-wrap{flex:1;min-width:0;display:flex;align-items:center;gap:5px}
+.item-name{font-size:13px;color:#ccc;line-height:1.3;word-break:break-all;cursor:pointer;flex:1}
+.item-name:hover{color:#fff}
+.item-name-input{flex:1;background:#1e1e1e;border:1px solid #5599ee;border-radius:8px;padding:5px 8px;color:#eee;font-size:13px;outline:none;min-width:0}
+.item-edit-btn{background:none;border:none;color:#3a5a7a;font-size:14px;cursor:pointer;padding:3px;flex-shrink:0;line-height:1}
+.item-edit-btn:active{color:#77aadd;transform:scale(0.85)}
+.item-save-btn{background:#1a3a1a;border:1px solid #336633;color:#66dd66;font-size:12px;border-radius:7px;padding:4px 8px;cursor:pointer;flex-shrink:0;font-weight:500}
+.item-save-btn:active{background:#122a12;transform:scale(0.92)}
+
+/* 數量控制 */
 .dup-ctrl{display:flex;align-items:center;gap:4px;flex-shrink:0}
 .dup-btn{width:30px;height:30px;border-radius:8px;border:none;background:#303030;color:#aaa;font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:500;flex-shrink:0;transition:transform 0.1s}
 .dup-btn:active{transform:scale(0.8);background:#444}
 .dup-count{font-size:13px;font-weight:500;color:#888;min-width:20px;text-align:center}
-.item-del{background:none;border:none;color:#442222;font-size:15px;cursor:pointer;padding:4px;flex-shrink:0}
+.item-del{background:none;border:none;color:#442222;font-size:15px;cursor:pointer;padding:4px;flex-shrink:0;line-height:1}
 .item-del:active{color:#ff5555;transform:scale(0.8)}
 .empty-hint{text-align:center;color:#3a3a3a;font-size:12px;padding:12px 0}
 
-/* ── 新增子類別區 ── */
+/* ══ 新增子類別 / 項目 ══ */
 .add-subcat-area{margin-top:6px;background:#161616;border-radius:11px;padding:9px 10px}
 .add-subcat-row{display:flex;gap:6px;margin-bottom:6px}
 .add-subcat-row input{flex:1;background:#222;border:1px solid #383838;border-radius:9px;padding:8px 11px;color:#eee;font-size:13px;outline:none}
@@ -179,7 +178,6 @@ body{font-family:system-ui,sans-serif;background:#111;color:#eee;overscroll-beha
 .btn-preset{background:#241e00;color:#ccaa22;border:1px solid #3a3000;border-radius:7px;padding:5px 10px;font-size:11px;cursor:pointer;font-weight:500}
 .btn-preset:active{transform:scale(0.9)}
 
-/* ── 新增項目區 ── */
 .add-item-area{margin-top:6px;background:#181818;border-radius:11px;padding:9px 10px}
 .add-item-row{display:flex;gap:6px;margin-bottom:7px}
 .add-item-row input{flex:1;background:#222;border:1px solid #383838;border-radius:9px;padding:8px 11px;color:#eee;font-size:13px;outline:none}
@@ -190,7 +188,7 @@ body{font-family:system-ui,sans-serif;background:#111;color:#eee;overscroll-beha
 .color-tag{border:none;border-radius:7px;padding:5px 9px;font-size:12px;font-weight:500;cursor:pointer;flex-shrink:0}
 .color-tag:active{transform:scale(0.84);opacity:0.75}
 
-/* ── 安裝說明 ── */
+/* ══ 安裝說明 ══ */
 .guide{max-width:640px;margin:28px auto 0;padding:18px 12px 28px;border-top:1px solid #222}
 .guide h2{font-size:16px;font-weight:500;color:#fff;margin-bottom:4px}
 .guide .subtitle{font-size:12px;color:#555;margin-bottom:16px}
@@ -212,7 +210,7 @@ body{font-family:system-ui,sans-serif;background:#111;color:#eee;overscroll-beha
 <div class="modal-overlay" id="exportModal">
   <div class="modal-box">
     <div class="modal-title">📤 匯出備份</div>
-    <div class="modal-desc">以下是你目前全部的收集資料（JSON 格式）。請複製後儲存至備忘錄、雲端筆記或訊息中。</div>
+    <div class="modal-desc">以下是你目前全部的收集資料（JSON 格式）。請複製後儲存至備忘錄或雲端筆記。</div>
     <textarea class="export-textarea" id="exportText" readonly></textarea>
     <div class="copy-toast" id="copyToast">✅ 備份已複製到剪貼簿！</div>
     <div class="modal-btns">
@@ -226,12 +224,25 @@ body{font-family:system-ui,sans-serif;background:#111;color:#eee;overscroll-beha
 <div class="modal-overlay" id="importModal">
   <div class="modal-box">
     <div class="modal-title">📥 匯入紀錄</div>
-    <div class="modal-desc">將先前複製的備份 JSON 貼入下方，再點「確認匯入」。匯入後將覆蓋目前所有資料。</div>
+    <div class="modal-desc">將備份 JSON 貼入下方，點「確認匯入」後將覆蓋目前所有資料。</div>
     <textarea class="import-textarea" id="importText" placeholder='貼上備份 JSON，例如：{"cats":[…]}'></textarea>
     <div class="modal-error" id="importError"></div>
     <div class="modal-btns">
       <button class="modal-btn modal-btn-danger" onclick="confirmImport()">✅ 確認匯入</button>
       <button class="modal-btn modal-btn-secondary" onclick="closeModal('importModal')">取消</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 編輯名稱 Modal ══ -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal-box">
+    <div class="modal-title" id="editModalTitle">✏️ 修改名稱</div>
+    <input class="edit-input" id="editInput" placeholder="輸入新名稱" onkeydown="if(event.key==='Enter')saveEdit()">
+    <div class="modal-error" id="editError"></div>
+    <div class="modal-btns">
+      <button class="modal-btn modal-btn-primary" onclick="saveEdit()">✅ 儲存</button>
+      <button class="modal-btn modal-btn-secondary" onclick="closeModal('editModal')">取消</button>
     </div>
   </div>
 </div>
@@ -245,7 +256,13 @@ body{font-family:system-ui,sans-serif;background:#111;color:#eee;overscroll-beha
 
   <div class="stats-bar" id="statsBar"></div>
 
-  <!-- 備份列 -->
+  <!-- 全域飾品進度條 -->
+  <div class="global-progress">
+    <span class="global-progress-label">✨ 飾品達成率</span>
+    <div class="progress-track"><div class="progress-fill" id="globalProgressFill" style="width:0%"></div></div>
+    <span class="progress-pct" id="globalProgressPct">0%</span>
+  </div>
+
   <div class="backup-row">
     <button class="btn-backup btn-export" onclick="openExport()">📤 匯出備份</button>
     <button class="btn-backup btn-import" onclick="openImport()">📥 匯入紀錄</button>
@@ -292,9 +309,9 @@ body{font-family:system-ui,sans-serif;background:#111;color:#eee;overscroll-beha
 </div>
 
 <script>
-/* ══════════════════════════════════════════════
+/* ═══════════════════════════════════════════════════
    常數
-══════════════════════════════════════════════ */
+═══════════════════════════════════════════════════ */
 const COLORS = [
   {label:'紅', bg:'#4a1212', color:'#ffaaaa'},
   {label:'黃', bg:'#433700', color:'#ffe566'},
@@ -306,7 +323,6 @@ const COLORS = [
   {label:'冰', bg:'#082033', color:'#88bbff'},
   {label:'金', bg:'#332200', color:'#ffcc33'}
 ];
-
 const STATUS_DEF = [
   {lbl:'未擁有', ico:'—',  cls:'s0'},
   {lbl:'花盆',   ico:'🪴', cls:'s1'},
@@ -314,10 +330,10 @@ const STATUS_DEF = [
   {lbl:'飾品',   ico:'✨', cls:'s3'}
 ];
 
-/* ══════════════════════════════════════════════
+/* ═══════════════════════════════════════════════════
    資料層
-══════════════════════════════════════════════ */
-const STORE_KEY = 'pikmin_v3';
+═══════════════════════════════════════════════════ */
+const STORE_KEY = 'pikmin_v3'; // 沿用 v3 key，保持向下相容
 
 function loadData() {
   try { return JSON.parse(localStorage.getItem(STORE_KEY)) || {cats:[]}; }
@@ -329,32 +345,51 @@ let data = loadData();
 let openCats    = {};
 let openSubcats = {};
 let allExpanded = true;
+// 正在編輯的項目 id（行內編輯）
+let editingItemId = null;
 
-/* 遷移舊 v2 資料 */
-data.cats.forEach(cat => {
-  if (!cat.subcats) cat.subcats = [];
-  if (cat.items && cat.items.length > 0 && cat.subcats.length === 0) {
-    cat.subcats.push({
-      id: 'sub_legacy_' + cat.id,
-      name: '預設',
-      items: cat.items.map(i => ({...i, status: Math.min(i.status||0, 3), dups: i.dups||0}))
+/* ── 遷移 & 補齊預設值（v3.x → v4，向下相容）── */
+function migrateData(d) {
+  if (!d || !Array.isArray(d.cats)) d = {cats:[]};
+  d.cats.forEach(cat => {
+    if (!cat.id)      cat.id   = 'cat_' + Date.now() + '_' + Math.random();
+    if (!cat.name)    cat.name = '未命名類別';
+    if (!Array.isArray(cat.subcats)) cat.subcats = [];
+    // 舊版 v2 items 直升子類別
+    if (Array.isArray(cat.items) && cat.items.length > 0 && cat.subcats.length === 0) {
+      cat.subcats.push({
+        id: 'sub_legacy_' + cat.id,
+        name: '預設',
+        items: cat.items.map(i => ({...i, status: Math.min(i.status||0,3), dups: i.dups||0}))
+      });
+    }
+    if (cat.items) delete cat.items;
+    cat.subcats.forEach(sub => {
+      if (!sub.id)   sub.id   = 'sub_' + Date.now() + '_' + Math.random();
+      if (!sub.name) sub.name = '未命名子類別';
+      if (!Array.isArray(sub.items)) sub.items = [];
+      sub.items.forEach(item => {
+        if (!item.id)     item.id   = 'item_' + Date.now() + '_' + Math.random();
+        if (!item.name)   item.name = '未命名';
+        if (item.status == null) item.status = 0;
+        if (item.dups   == null) item.dups   = 0;
+        // 連動修正
+        if (item.status > 0 && item.dups < 1) item.dups = 1;
+        if (item.dups   === 0) item.status = 0;
+      });
     });
-  }
-  if (cat.items) delete cat.items;
-});
-/* 確保 dups / status 一致 */
-data.cats.forEach(cat => cat.subcats.forEach(sub => sub.items.forEach(item => {
-  if (item.status > 0 && (!item.dups || item.dups < 1)) item.dups = 1;
-  if (item.dups === 0) item.status = 0;
-})));
+  });
+  return d;
+}
+data = migrateData(data);
 saveData(data);
 
-/* ══════════════════════════════════════════════
+/* ═══════════════════════════════════════════════════
    展開 / 收起
-══════════════════════════════════════════════ */
+═══════════════════════════════════════════════════ */
 function initOpen() {
   data.cats.forEach(c => {
-    if (openCats[c.id] === undefined) openCats[c.id] = true;
+    if (openCats[c.id]    === undefined) openCats[c.id]    = true;
     c.subcats.forEach(s => {
       if (openSubcats[s.id] === undefined) openSubcats[s.id] = true;
     });
@@ -362,7 +397,7 @@ function initOpen() {
 }
 initOpen();
 
-function toggleCat(id)    { openCats[id] = !openCats[id]; render(); }
+function toggleCat(id)    { openCats[id]    = !openCats[id];    render(); }
 function toggleSubcat(id) { openSubcats[id] = !openSubcats[id]; render(); }
 function toggleAll() {
   allExpanded = !allExpanded;
@@ -374,123 +409,175 @@ function toggleAll() {
   render();
 }
 
-/* ══════════════════════════════════════════════
+/* ═══════════════════════════════════════════════════
+   統計
+═══════════════════════════════════════════════════ */
+function calcStats(items) {
+  const pin    = items.filter(i => i.status === 3).length;
+  const normal = items.filter(i => i.status === 2).length;
+  const flower = items.filter(i => i.status === 1).length;
+  const none   = items.filter(i => i.status === 0).length;
+  const pinQty    = items.filter(i=>i.status===3).reduce((a,i)=>a+(i.dups||0),0);
+  const normalQty = items.filter(i=>i.status===2).reduce((a,i)=>a+(i.dups||0),0);
+  const flowerQty = items.filter(i=>i.status===1).reduce((a,i)=>a+(i.dups||0),0);
+  const total  = items.length;
+  const pinPct = total > 0 ? Math.round(pin / total * 100) : 0;
+  return {pin, normal, flower, none, pinQty, normalQty, flowerQty, total, pinPct};
+}
+
+function globalStats() {
+  const all = [];
+  data.cats.forEach(cat => cat.subcats.forEach(sub => all.push(...sub.items)));
+  return calcStats(all);
+}
+
+/* ═══════════════════════════════════════════════════
    備份功能
-══════════════════════════════════════════════ */
+═══════════════════════════════════════════════════ */
 function openExport() {
-  const json = JSON.stringify(data, null, 2);
-  document.getElementById('exportText').value = json;
+  document.getElementById('exportText').value = JSON.stringify(data, null, 2);
   document.getElementById('copyToast').classList.remove('show');
   document.getElementById('exportModal').classList.add('active');
 }
-
 function copyExport() {
   const ta = document.getElementById('exportText');
-  ta.select();
-  ta.setSelectionRange(0, 99999); // iOS 相容
-
-  let success = false;
+  ta.select(); ta.setSelectionRange(0, 99999);
+  const done = () => {
+    document.getElementById('copyToast').classList.add('show');
+    setTimeout(() => document.getElementById('copyToast').classList.remove('show'), 3000);
+  };
   if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(ta.value).then(() => {
-      showCopyToast();
-    }).catch(() => {
-      // fallback
-      success = document.execCommand('copy');
-      if (success) showCopyToast();
-    });
-  } else {
-    success = document.execCommand('copy');
-    if (success) showCopyToast();
-  }
+    navigator.clipboard.writeText(ta.value).then(done).catch(() => { document.execCommand('copy'); done(); });
+  } else { document.execCommand('copy'); done(); }
 }
-
-function showCopyToast() {
-  const toast = document.getElementById('copyToast');
-  toast.classList.add('show');
-  setTimeout(() => toast.classList.remove('show'), 3000);
-}
-
 function openImport() {
   document.getElementById('importText').value = '';
-  document.getElementById('importError').textContent = '';
-  document.getElementById('importError').classList.remove('show');
+  const e = document.getElementById('importError');
+  e.textContent = ''; e.classList.remove('show');
   document.getElementById('importModal').classList.add('active');
 }
-
 function confirmImport() {
   const raw = document.getElementById('importText').value.trim();
   const errEl = document.getElementById('importError');
   errEl.classList.remove('show');
-
-  if (!raw) {
-    errEl.textContent = '❌ 請先貼上備份內容。';
-    errEl.classList.add('show');
-    return;
-  }
-
+  if (!raw) { errEl.textContent = '❌ 請先貼上備份內容。'; errEl.classList.add('show'); return; }
   let parsed;
-  try {
-    parsed = JSON.parse(raw);
-  } catch(e) {
-    errEl.textContent = '❌ 格式錯誤：無法解析 JSON，請確認貼上的內容完整無誤。';
-    errEl.classList.add('show');
-    return;
+  try { parsed = JSON.parse(raw); } catch(e) {
+    errEl.textContent = '❌ 格式錯誤：無法解析 JSON，請確認內容完整無誤。'; errEl.classList.add('show'); return;
   }
-
-  // 結構驗證
-  if (!parsed || typeof parsed !== 'object' || !Array.isArray(parsed.cats)) {
-    errEl.textContent = '❌ 格式錯誤：資料必須包含 "cats" 陣列。請使用本 App 匯出的備份檔。';
-    errEl.classList.add('show');
-    return;
+  if (!parsed || !Array.isArray(parsed.cats)) {
+    errEl.textContent = '❌ 格式錯誤：資料必須包含 "cats" 陣列。'; errEl.classList.add('show'); return;
   }
-
-  // 進一步驗證每個類別至少有 id、name、subcats
-  const valid = parsed.cats.every(c =>
-    c && typeof c.id === 'string' && typeof c.name === 'string' && Array.isArray(c.subcats)
-  );
-  if (!valid) {
-    errEl.textContent = '❌ 格式錯誤：類別資料結構不符，可能是舊版備份或損毀的資料。';
-    errEl.classList.add('show');
-    return;
-  }
-
-  // 覆蓋確認
   if (!confirm('⚠️ 匯入將覆蓋目前所有的收集紀錄，此動作無法復原。\n確定要繼續嗎？')) return;
-
-  // 寫入並重新整理
-  saveData(parsed);
+  // 自動補齊缺失欄位後存入
+  saveData(migrateData(parsed));
   closeModal('importModal');
   location.reload();
 }
+function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
-function closeModal(id) {
-  document.getElementById(id).classList.remove('active');
+document.querySelectorAll('.modal-overlay').forEach(o =>
+  o.addEventListener('click', e => { if (e.target === o) o.classList.remove('active'); })
+);
+
+/* ═══════════════════════════════════════════════════
+   編輯 Modal（類別 / 子類別名稱）
+═══════════════════════════════════════════════════ */
+let editCtx = null; // {type:'cat'|'subcat', catId, subcatId}
+
+function openEditModal(type, catId, subcatId) {
+  editCtx = {type, catId, subcatId};
+  let currentName = '';
+  if (type === 'cat') {
+    const cat = data.cats.find(c => c.id === catId);
+    currentName = cat ? cat.name : '';
+    document.getElementById('editModalTitle').textContent = '✏️ 修改類別名稱';
+  } else {
+    const cat = data.cats.find(c => c.id === catId);
+    const sub = cat && cat.subcats.find(s => s.id === subcatId);
+    currentName = sub ? sub.name : '';
+    document.getElementById('editModalTitle').textContent = '✏️ 修改子類別名稱';
+  }
+  const inp = document.getElementById('editInput');
+  inp.value = currentName;
+  document.getElementById('editError').textContent = '';
+  document.getElementById('editError').classList.remove('show');
+  document.getElementById('editModal').classList.add('active');
+  setTimeout(() => inp.focus(), 80);
 }
 
-// 點擊背景關閉 modal
-document.querySelectorAll('.modal-overlay').forEach(overlay => {
-  overlay.addEventListener('click', e => {
-    if (e.target === overlay) overlay.classList.remove('active');
-  });
-});
+function saveEdit() {
+  if (!editCtx) return;
+  const newName = document.getElementById('editInput').value.trim();
+  const errEl   = document.getElementById('editError');
+  errEl.classList.remove('show');
+  if (!newName) { errEl.textContent = '❌ 名稱不能為空。'; errEl.classList.add('show'); return; }
 
-/* ══════════════════════════════════════════════
+  if (editCtx.type === 'cat') {
+    const isDup = data.cats.some(c => c.name === newName && c.id !== editCtx.catId);
+    if (isDup) { errEl.textContent = '⚠️ 已有該名稱類別，請換個名稱。'; errEl.classList.add('show'); return; }
+    const cat = data.cats.find(c => c.id === editCtx.catId);
+    if (cat) cat.name = newName;
+  } else {
+    const cat = data.cats.find(c => c.id === editCtx.catId);
+    if (cat) {
+      const isDup = cat.subcats.some(s => s.name === newName && s.id !== editCtx.subcatId);
+      if (isDup) { errEl.textContent = '⚠️ 已有該名稱子類別，請換個名稱。'; errEl.classList.add('show'); return; }
+      const sub = cat.subcats.find(s => s.id === editCtx.subcatId);
+      if (sub) sub.name = newName;
+    }
+  }
+  saveData(data);
+  closeModal('editModal');
+  editCtx = null;
+  render();
+}
+
+/* ═══════════════════════════════════════════════════
+   行內編輯（項目名稱）
+═══════════════════════════════════════════════════ */
+function startItemEdit(itemId) {
+  editingItemId = itemId;
+  render();
+  // 聚焦
+  setTimeout(() => {
+    const inp = document.getElementById('item_edit_' + itemId);
+    if (inp) { inp.focus(); inp.select(); }
+  }, 40);
+}
+
+function saveItemEdit(catId, subcatId, itemId) {
+  const inp = document.getElementById('item_edit_' + itemId);
+  if (!inp) return;
+  const newName = inp.value.trim();
+  if (!newName) return;
+  const cat  = data.cats.find(c => c.id === catId);
+  const sub  = cat && cat.subcats.find(s => s.id === subcatId);
+  const item = sub && sub.items.find(i => i.id === itemId);
+  if (item) item.name = newName;
+  saveData(data);
+  editingItemId = null;
+  render();
+}
+
+function cancelItemEdit() {
+  editingItemId = null;
+  render();
+}
+
+/* ═══════════════════════════════════════════════════
    CRUD
-══════════════════════════════════════════════ */
+═══════════════════════════════════════════════════ */
 function addCategory() {
   const inp = document.getElementById('newCatName');
   const name = inp.value.trim();
   if (!name) return;
-  if (data.cats.some(c => c.name === name)) {
-    alert('⚠️ 已有該名稱類別，請換個名稱。');
-    return;
-  }
+  if (data.cats.some(c => c.name === name)) { alert('⚠️ 已有該名稱類別，請換個名稱。'); return; }
   const id = 'cat_' + Date.now();
   data.cats.push({id, name, subcats:[]});
   openCats[id] = true;
   saveData(data); inp.value = ''; render();
 }
-
 function delCat(catId) {
   const cat = data.cats.find(c => c.id === catId);
   if (!cat) return;
@@ -498,42 +585,31 @@ function delCat(catId) {
   data.cats = data.cats.filter(c => c.id !== catId);
   saveData(data); render();
 }
-
 function addSubcat(catId) {
   const inp = document.getElementById('sinp_' + catId);
   const name = inp.value.trim();
   if (!name) return;
   const cat = data.cats.find(c => c.id === catId);
-  if (cat.subcats.some(s => s.name === name)) {
-    alert('⚠️ 已有該名稱類別，請換個名稱。');
-    return;
-  }
+  if (cat.subcats.some(s => s.name === name)) { alert('⚠️ 已有該名稱類別，請換個名稱。'); return; }
   const id = 'sub_' + Date.now();
   cat.subcats.push({id, name, items:[]});
   openSubcats[id] = true;
   saveData(data); inp.value = ''; render();
 }
-
 function addSubcatPreset(catId) {
   const inp = document.getElementById('sinp_' + catId);
   const name = inp.value.trim();
   if (!name) { alert('請先輸入子類別名稱！'); return; }
   const cat = data.cats.find(c => c.id === catId);
-  if (cat.subcats.some(s => s.name === name)) {
-    alert('⚠️ 已有該名稱類別，請換個名稱。');
-    return;
-  }
+  if (cat.subcats.some(s => s.name === name)) { alert('⚠️ 已有該名稱類別，請換個名稱。'); return; }
   const id = 'sub_' + Date.now();
   const items = ['紅','黃','青','紫','白','粉','岩','冰'].map((clr, i) => ({
-    id: 'item_' + Date.now() + '_' + i,
-    name: clr + ' 皮克敏',
-    status: 0, dups: 0
+    id:'item_' + Date.now() + '_' + i, name: clr + ' 皮克敏', status:0, dups:0
   }));
   cat.subcats.push({id, name, items});
   openSubcats[id] = true;
   saveData(data); inp.value = ''; render();
 }
-
 function delSubcat(catId, subcatId) {
   const cat = data.cats.find(c => c.id === catId);
   const sub = cat && cat.subcats.find(s => s.id === subcatId);
@@ -542,7 +618,6 @@ function delSubcat(catId, subcatId) {
   cat.subcats = cat.subcats.filter(s => s.id !== subcatId);
   saveData(data); render();
 }
-
 function addItem(catId, subcatId) {
   const inp = document.getElementById('iinp_' + subcatId);
   const name = inp.value.trim();
@@ -553,24 +628,23 @@ function addItem(catId, subcatId) {
   sub.items.push({id:'item_'+Date.now()+'_'+Math.random(), name, status:0, dups:0});
   saveData(data); inp.value = ''; render();
 }
-
 function delItem(catId, subcatId, itemId) {
-  const cat = data.cats.find(c => c.id === catId);
-  const sub = cat && cat.subcats.find(s => s.id === subcatId);
-  if (!sub) return;
-  const item = sub.items.find(i => i.id === itemId);
+  const cat  = data.cats.find(c => c.id === catId);
+  const sub  = cat && cat.subcats.find(s => s.id === subcatId);
+  const item = sub && sub.items.find(i => i.id === itemId);
   if (!item) return;
   if (!confirm(`確定要刪除「${item.name}」嗎？\n此動作無法復原。`)) return;
   sub.items = sub.items.filter(i => i.id !== itemId);
+  if (editingItemId === itemId) editingItemId = null;
   saveData(data); render();
 }
 
-/* ══════════════════════════════════════════════
+/* ═══════════════════════════════════════════════════
    狀態 ↔ 數量連動
-══════════════════════════════════════════════ */
+═══════════════════════════════════════════════════ */
 function cycleStatus(catId, subcatId, itemId) {
-  const cat = data.cats.find(c => c.id === catId);
-  const sub = cat && cat.subcats.find(s => s.id === subcatId);
+  const cat  = data.cats.find(c => c.id === catId);
+  const sub  = cat && cat.subcats.find(s => s.id === subcatId);
   const item = sub && sub.items.find(i => i.id === itemId);
   if (!item) return;
   item.status = (item.status + 1) % 4;
@@ -578,76 +652,53 @@ function cycleStatus(catId, subcatId, itemId) {
   if (item.status === 0) item.dups = 0;
   saveData(data); render();
 }
-
 function changeDup(catId, subcatId, itemId, delta) {
-  const cat = data.cats.find(c => c.id === catId);
-  const sub = cat && cat.subcats.find(s => s.id === subcatId);
+  const cat  = data.cats.find(c => c.id === catId);
+  const sub  = cat && cat.subcats.find(s => s.id === subcatId);
   const item = sub && sub.items.find(i => i.id === itemId);
   if (!item) return;
-  const newDups = Math.max(0, (item.dups || 0) + delta);
-  item.dups = newDups;
-  if (newDups === 0) item.status = 0;
-  if (newDups > 0 && item.status === 0) item.status = 1;
+  const nd = Math.max(0, (item.dups||0) + delta);
+  item.dups = nd;
+  if (nd === 0) item.status = 0;
+  if (nd > 0 && item.status === 0) item.status = 1;
   saveData(data); render();
 }
-
 function injectColor(subcatId, label) {
   const inp = document.getElementById('iinp_' + subcatId);
   if (!inp) return;
   const v = inp.value, cur = inp.selectionStart != null ? inp.selectionStart : v.length;
-  inp.value = v.slice(0, cur) + label + v.slice(cur);
-  inp.focus();
-  inp.selectionStart = inp.selectionEnd = cur + label.length;
+  inp.value = v.slice(0,cur) + label + v.slice(cur);
+  inp.focus(); inp.selectionStart = inp.selectionEnd = cur + label.length;
 }
 
-/* ══════════════════════════════════════════════
-   統計
-══════════════════════════════════════════════ */
-function calcStats(items) {
-  const pin    = items.filter(i => i.status === 3).length;
-  const normal = items.filter(i => i.status === 2).length;
-  const flower = items.filter(i => i.status === 1).length;
-  const none   = items.filter(i => i.status === 0).length;
-  const pinQty    = items.filter(i=>i.status===3).reduce((a,i)=>a+(i.dups||0),0);
-  const normalQty = items.filter(i=>i.status===2).reduce((a,i)=>a+(i.dups||0),0);
-  const flowerQty = items.filter(i=>i.status===1).reduce((a,i)=>a+(i.dups||0),0);
-  return {pin, normal, flower, none, pinQty, normalQty, flowerQty};
-}
-
-function globalStats() {
-  const all = [];
-  data.cats.forEach(cat => cat.subcats.forEach(sub => all.push(...sub.items)));
-  return calcStats(all);
-}
-
-/* ══════════════════════════════════════════════
+/* ═══════════════════════════════════════════════════
    拖曳排序
-══════════════════════════════════════════════ */
+═══════════════════════════════════════════════════ */
 let drag = null;
 
 function bindDrag(handle, type, catId, subcatId, itemId) {
-  const startDrag = e => {
+  const start = e => {
     const parentEl = handle.closest('.category, .subcat, .item-row');
     if (!parentEl) return;
     const touch = e.touches ? e.touches[0] : e;
-    const rect = parentEl.getBoundingClientRect();
+    const rect  = parentEl.getBoundingClientRect();
     const ghost = parentEl.cloneNode(true);
     ghost.style.cssText = [
-      'position:fixed',`left:${rect.left}px`,`top:${rect.top}px`,
-      `width:${rect.width}px`,'opacity:0.8','pointer-events:none',
-      'z-index:9999','border-radius:12px','box-shadow:0 4px 20px rgba(0,0,0,0.6)'
+      'position:fixed', `left:${rect.left}px`, `top:${rect.top}px`,
+      `width:${rect.width}px`, 'opacity:0.8', 'pointer-events:none',
+      'z-index:9999', 'border-radius:12px', 'box-shadow:0 4px 20px rgba(0,0,0,0.6)'
     ].join(';');
     document.body.appendChild(ghost);
     parentEl.classList.add('dragging');
     let listEl;
-    if      (type === 'cat')    listEl = document.getElementById('catList');
-    else if (type === 'subcat') listEl = document.getElementById('sublist_' + catId);
-    else                        listEl = document.getElementById('itemlist_' + subcatId);
+    if      (type==='cat')    listEl = document.getElementById('catList');
+    else if (type==='subcat') listEl = document.getElementById('sublist_' + catId);
+    else                      listEl = document.getElementById('itemlist_' + subcatId);
     drag = {type, catId, subcatId, itemId, el:parentEl, ghost, listEl, offsetY: touch.clientY - rect.top};
     e.preventDefault();
   };
-  handle.addEventListener('touchstart', startDrag, {passive:false});
-  handle.addEventListener('mousedown', e => { if (e.button === 0) startDrag(e); });
+  handle.addEventListener('touchstart', start, {passive:false});
+  handle.addEventListener('mousedown', e => { if (e.button===0) start(e); });
 }
 
 function clearDragOver() {
@@ -655,20 +706,17 @@ function clearDragOver() {
     el.classList.remove('drag-over-top','drag-over-bot')
   );
 }
-
 function getDragTarget(listEl, y) {
   for (const child of listEl.children) {
     if (child === drag.el || !child.dataset.id) continue;
     const r = child.getBoundingClientRect();
-    if (y >= r.top && y <= r.bottom)
-      return {el:child, before: y < r.top + r.height/2};
+    if (y >= r.top && y <= r.bottom) return {el:child, before: y < r.top + r.height/2};
   }
   return null;
 }
 
 document.addEventListener('touchmove', e => {
-  if (!drag) return;
-  e.preventDefault();
+  if (!drag) return; e.preventDefault();
   const y = e.touches[0].clientY;
   drag.ghost.style.top = (y - drag.offsetY) + 'px';
   clearDragOver();
@@ -686,50 +734,52 @@ document.addEventListener('mousemove', e => {
 
 function finishDrag(y) {
   if (!drag) return;
-  drag.el.classList.remove('dragging');
-  drag.ghost.remove();
-  clearDragOver();
+  drag.el.classList.remove('dragging'); drag.ghost.remove(); clearDragOver();
   const t = getDragTarget(drag.listEl, y);
   if (t) {
     const {type, catId, subcatId, itemId} = drag;
     const toId = t.el.dataset.id;
-    const move = (arr, fromId, toId, before) => {
-      const fi = arr.findIndex(x => x.id === fromId);
-      const ti = arr.findIndex(x => x.id === toId);
-      if (fi < 0 || ti < 0 || fi === ti) return;
-      const [item] = arr.splice(fi, 1);
-      const newTi = arr.findIndex(x => x.id === toId);
-      arr.splice(before ? newTi : newTi+1, 0, item);
+    const mv = (arr, fromId, toId, before) => {
+      const fi = arr.findIndex(x=>x.id===fromId);
+      const ti = arr.findIndex(x=>x.id===toId);
+      if (fi<0||ti<0||fi===ti) return;
+      const [it] = arr.splice(fi,1);
+      const ni = arr.findIndex(x=>x.id===toId);
+      arr.splice(before?ni:ni+1, 0, it);
     };
-    if (type === 'cat') {
-      move(data.cats, itemId, toId, t.before);
-    } else if (type === 'subcat') {
-      const cat = data.cats.find(c => c.id === catId);
-      if (cat) move(cat.subcats, itemId, toId, t.before);
-    } else {
-      const cat = data.cats.find(c => c.id === catId);
-      const sub = cat && cat.subcats.find(s => s.id === subcatId);
-      if (sub) move(sub.items, itemId, toId, t.before);
-    }
+    if (type==='cat') mv(data.cats, itemId, toId, t.before);
+    else if (type==='subcat') { const c=data.cats.find(c=>c.id===catId); if(c) mv(c.subcats,itemId,toId,t.before); }
+    else { const c=data.cats.find(c=>c.id===catId); const s=c&&c.subcats.find(s=>s.id===subcatId); if(s) mv(s.items,itemId,toId,t.before); }
     saveData(data);
   }
-  drag = null;
-  render();
+  drag = null; render();
 }
-
 document.addEventListener('touchend', e => finishDrag(e.changedTouches[0].clientY));
 document.addEventListener('mouseup',  e => finishDrag(e.clientY));
 
-/* ══════════════════════════════════════════════
+/* ═══════════════════════════════════════════════════
+   進度條 helper
+═══════════════════════════════════════════════════ */
+function progressBar(pct, fillClass) {
+  return `<div class="${fillClass}-track" style="height:3px;background:#252525;border-radius:99px;overflow:hidden;flex:1">
+    <div style="height:100%;width:${pct}%;border-radius:99px;background:inherit;transition:width 0.4s ease" class="${fillClass}-fill"></div>
+  </div>`;
+}
+
+/* ─ 進度條顏色對照 ─ */
+const CAT_PROG_BG    = 'linear-gradient(90deg,#1a6688,#44bbdd)';
+const SUBCAT_PROG_BG = 'linear-gradient(90deg,#226644,#44aa77)';
+
+/* ═══════════════════════════════════════════════════
    渲染
-══════════════════════════════════════════════ */
+═══════════════════════════════════════════════════ */
 function esc(s) {
   return String(s)
     .replace(/&/g,'&amp;').replace(/</g,'&lt;')
     .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-function renderStats() {
+function renderStatsAndProgress() {
   const gs = globalStats();
   document.getElementById('statsBar').innerHTML = `
     <div class="stat-pill"><span>${gs.pin}</span>✨ 飾品種<small>${gs.pinQty}隻</small></div>
@@ -737,19 +787,21 @@ function renderStats() {
     <div class="stat-pill"><span>${gs.flower}</span>🪴 花盆種<small>${gs.flowerQty}個</small></div>
     <div class="stat-pill"><span>${gs.none}</span>— 未取得</div>
   `;
+  document.getElementById('globalProgressFill').style.width = gs.pinPct + '%';
+  document.getElementById('globalProgressPct').textContent  = gs.pinPct + '%';
 }
 
 function render() {
   initOpen();
-  renderStats();
+  renderStatsAndProgress();
 
   const q = (document.getElementById('searchInput').value || '').toLowerCase().trim();
   const catList = document.getElementById('catList');
 
   const visible = data.cats.map(cat => {
-    const mc = cat.name.toLowerCase().includes(q);
+    const mc   = cat.name.toLowerCase().includes(q);
     const subs = cat.subcats.map(sub => {
-      const ms = sub.name.toLowerCase().includes(q);
+      const ms    = sub.name.toLowerCase().includes(q);
       const items = sub.items.filter(item => mc || ms || item.name.toLowerCase().includes(q));
       return {sub, items, show: mc || ms || items.length > 0};
     }).filter(x => x.show);
@@ -764,58 +816,89 @@ function render() {
   let html = '';
 
   visible.forEach(({cat, subs}) => {
-    const isOpen = openCats[cat.id] !== false;
-    const allItems = cat.subcats.flatMap(s => s.items);
-    const cs = calcStats(allItems);
-    const statStr = `✨${cs.pin}(${cs.pinQty}隻) 🌿${cs.normal}(${cs.normalQty}) 🪴${cs.flower}(${cs.flowerQty}) —${cs.none}`;
+    const isOpen    = openCats[cat.id] !== false;
+    const allItems  = cat.subcats.flatMap(s => s.items);
+    const cs        = calcStats(allItems);
+    const statStr   = `✨${cs.pin}(${cs.pinQty}隻) 🌿${cs.normal}(${cs.normalQty}) 🪴${cs.flower}(${cs.flowerQty}) —${cs.none}`;
+
+    // 大類別進度條（飾品達成率）
+    const catProgBar = `<div style="height:4px;background:#2a2a2a;border-radius:${isOpen?'0 0 0 0':'0 0 13px 13px'};overflow:hidden">
+      <div style="height:100%;width:${cs.pinPct}%;background:${CAT_PROG_BG};transition:width 0.4s ease"></div>
+    </div>`;
 
     html += `<div class="category" data-id="${esc(cat.id)}">
-      <div class="cat-header">
+      <div style="background:#222;border-radius:${isOpen?'13px 13px 0 0':'13px'};display:flex;align-items:center;padding:10px 8px 10px 10px;gap:4px;user-select:none">
         <span class="drag-handle" data-dtype="cat" data-id="${esc(cat.id)}">⠿</span>
-        <div class="cat-header-info" onclick="toggleCat('${esc(cat.id)}')">
+        <div style="flex:1;cursor:pointer;min-width:0;overflow:hidden;padding:0 2px" onclick="toggleCat('${esc(cat.id)}')">
           <div class="cat-title">${esc(cat.name)}</div>
-          <div class="cat-stats">${statStr}</div>
+          <div class="cat-stats">${statStr} &nbsp;
+            <span style="color:${cs.pinPct>0?'#44ccaa':'#555'};font-size:11px">${cs.pinPct}%</span>
+          </div>
         </div>
-        <div class="cat-header-btns">
-          <button class="icon-btn del" onclick="delCat('${esc(cat.id)}')">🗑</button>
+        <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;padding-right:2px">
+          <button class="icon-btn edit" onclick="openEditModal('cat','${esc(cat.id)}',null)">✏️</button>
+          <button class="icon-btn del"  onclick="delCat('${esc(cat.id)}')">🗑</button>
           <button class="icon-btn arr ${isOpen?'open':''}" onclick="toggleCat('${esc(cat.id)}')">▶</button>
         </div>
-      </div>`;
+      </div>
+      ${catProgBar}`;
 
     if (isOpen) {
       html += `<div class="cat-body"><div id="sublist_${esc(cat.id)}">`;
 
       subs.forEach(({sub, items: fi}) => {
-        const subOpen = openSubcats[sub.id] !== false;
-        const ss = calcStats(sub.items);
-        const ssStr = `✨${ss.pin}(${ss.pinQty}) 🌿${ss.normal}(${ss.normalQty}) 🪴${ss.flower}(${ss.flowerQty}) —${ss.none}`;
+        const subOpen  = openSubcats[sub.id] !== false;
+        const ss       = calcStats(sub.items);
+        const ssStr    = `✨${ss.pin}(${ss.pinQty}) 🌿${ss.normal}(${ss.normalQty}) 🪴${ss.flower}(${ss.flowerQty}) —${ss.none}`;
+
+        // 子類別進度條
+        const subProgBar = `<div style="height:3px;background:#252525;border-radius:${subOpen?'0':'0 0 12px 12px'};overflow:hidden">
+          <div style="height:100%;width:${ss.pinPct}%;background:${SUBCAT_PROG_BG};transition:width 0.4s ease"></div>
+        </div>`;
 
         html += `<div class="subcat" data-id="${esc(sub.id)}">
-          <div class="subcat-header">
+          <div style="display:flex;align-items:center;padding:8px 6px 8px 8px;gap:3px;user-select:none">
             <span class="subcat-handle" data-dtype="subcat" data-catid="${esc(cat.id)}" data-id="${esc(sub.id)}">⠿</span>
-            <div class="subcat-header-info" onclick="toggleSubcat('${esc(sub.id)}')">
-              <div class="subcat-title">${esc(sub.name)}</div>
+            <div style="flex:1;cursor:pointer;min-width:0;padding:0 2px" onclick="toggleSubcat('${esc(sub.id)}')">
+              <div class="subcat-title">${esc(sub.name)}
+                <span style="font-size:10px;color:${ss.pinPct>0?'#44aa77':'#444'};margin-left:5px;font-weight:400">${ss.pinPct}%</span>
+              </div>
               <div class="subcat-stats">${ssStr}</div>
             </div>
-            <div class="subcat-header-btns">
-              <button class="subcat-del" onclick="delSubcat('${esc(cat.id)}','${esc(sub.id)}')">🗑</button>
-              <button class="subcat-arr ${subOpen?'open':''}" onclick="toggleSubcat('${esc(sub.id)}')">▶</button>
+            <div style="display:flex;align-items:center;gap:9px;flex-shrink:0;padding-right:2px">
+              <button class="subcat-icon edit" onclick="openEditModal('subcat','${esc(cat.id)}','${esc(sub.id)}')">✏️</button>
+              <button class="subcat-icon del"  onclick="delSubcat('${esc(cat.id)}','${esc(sub.id)}')">🗑</button>
+              <button class="subcat-icon arr ${subOpen?'open':''}" onclick="toggleSubcat('${esc(sub.id)}')">▶</button>
             </div>
-          </div>`;
+          </div>
+          ${subProgBar}`;
 
         if (subOpen) {
           html += `<div class="subcat-body"><div id="itemlist_${esc(sub.id)}">`;
           if (fi.length === 0) html += `<div class="empty-hint">尚無項目</div>`;
 
           fi.forEach(item => {
-            const sd = STATUS_DEF[item.status] || STATUS_DEF[0];
+            const sd        = STATUS_DEF[item.status] || STATUS_DEF[0];
+            const isEditing = editingItemId === item.id;
+
+            const nameCell = isEditing
+              ? `<div class="item-name-wrap">
+                   <input id="item_edit_${esc(item.id)}" class="item-name-input" value="${esc(item.name)}"
+                     onkeydown="if(event.key==='Enter')saveItemEdit('${esc(cat.id)}','${esc(sub.id)}','${esc(item.id)}');if(event.key==='Escape')cancelItemEdit()">
+                   <button class="item-save-btn" onclick="saveItemEdit('${esc(cat.id)}','${esc(sub.id)}','${esc(item.id)}')">儲存</button>
+                 </div>`
+              : `<div class="item-name-wrap">
+                   <span class="item-name" onclick="startItemEdit('${esc(item.id)}')">${esc(item.name)}</span>
+                   <button class="item-edit-btn" onclick="startItemEdit('${esc(item.id)}')">✏️</button>
+                 </div>`;
+
             html += `<div class="item-row" data-id="${esc(item.id)}">
               <span class="item-handle" data-dtype="item" data-catid="${esc(cat.id)}" data-subid="${esc(sub.id)}" data-id="${esc(item.id)}">⠿</span>
               <button class="status-btn ${sd.cls}" onclick="cycleStatus('${esc(cat.id)}','${esc(sub.id)}','${esc(item.id)}')">
                 <span class="sico">${sd.ico}</span>
                 <span class="slbl">${sd.lbl}</span>
               </button>
-              <span class="item-name">${esc(item.name)}</span>
+              ${nameCell}
               <div class="dup-ctrl">
                 <button class="dup-btn" onclick="changeDup('${esc(cat.id)}','${esc(sub.id)}','${esc(item.id)}',-1)">－</button>
                 <span class="dup-count">${item.dups||0}</span>
@@ -857,52 +940,42 @@ function render() {
 
   catList.innerHTML = html;
 
-  catList.querySelectorAll('[data-dtype]').forEach(handle => {
-    const dtype = handle.dataset.dtype;
-    const id    = handle.dataset.id;
-    const catId = handle.dataset.catid || null;
-    const subId = handle.dataset.subid || null;
-    bindDrag(handle, dtype, catId, subId, id);
+  // 綁定拖曳
+  catList.querySelectorAll('[data-dtype]').forEach(h => {
+    bindDrag(h, h.dataset.dtype, h.dataset.catid||null, h.dataset.subid||null, h.dataset.id);
   });
 }
 
-/* ══════════════════════════════════════════════
+/* ═══════════════════════════════════════════════════
    Demo 資料
-══════════════════════════════════════════════ */
+═══════════════════════════════════════════════════ */
 if (data.cats.length === 0) {
   data.cats = [
-    {
-      id:'cat_demo1', name:'餐廳系列',
-      subcats:[
-        {id:'sub_d1', name:'廚師帽子', items:[
-          {id:'i1',name:'紅 皮克敏', status:3, dups:2},
-          {id:'i2',name:'黃 皮克敏', status:2, dups:1},
-          {id:'i3',name:'青 皮克敏', status:1, dups:1},
-          {id:'i4',name:'紫 皮克敏', status:0, dups:0},
-          {id:'i5',name:'白 皮克敏', status:0, dups:0},
-          {id:'i6',name:'粉 皮克敏', status:0, dups:0},
-          {id:'i7',name:'岩 皮克敏', status:0, dups:0},
-          {id:'i8',name:'冰 皮克敏', status:0, dups:0}
-        ]},
-        {id:'sub_d2', name:'圍裙', items:[
-          {id:'i9', name:'紅 皮克敏', status:1, dups:1},
-          {id:'i10',name:'黃 皮克敏', status:0, dups:0}
-        ]}
-      ]
-    },
-    {
-      id:'cat_demo2', name:'雨天系列',
-      subcats:[
-        {id:'sub_d3', name:'雨衣款', items:[
-          {id:'i11',name:'青 皮克敏 A', status:3, dups:1},
-          {id:'i12',name:'青 皮克敏 B', status:1, dups:1},
-          {id:'i13',name:'紫 皮克敏',   status:0, dups:0}
-        ]}
-      ]
-    }
+    {id:'cat_demo1', name:'餐廳系列', subcats:[
+      {id:'sub_d1', name:'廚師帽子', items:[
+        {id:'i1',name:'紅 皮克敏',status:3,dups:2},
+        {id:'i2',name:'黃 皮克敏',status:2,dups:1},
+        {id:'i3',name:'青 皮克敏',status:1,dups:1},
+        {id:'i4',name:'紫 皮克敏',status:0,dups:0},
+        {id:'i5',name:'白 皮克敏',status:0,dups:0},
+        {id:'i6',name:'粉 皮克敏',status:0,dups:0},
+        {id:'i7',name:'岩 皮克敏',status:0,dups:0},
+        {id:'i8',name:'冰 皮克敏',status:0,dups:0}
+      ]},
+      {id:'sub_d2', name:'圍裙', items:[
+        {id:'i9', name:'紅 皮克敏',status:3,dups:1},
+        {id:'i10',name:'黃 皮克敏',status:1,dups:1}
+      ]}
+    ]},
+    {id:'cat_demo2', name:'雨天系列', subcats:[
+      {id:'sub_d3', name:'雨衣款', items:[
+        {id:'i11',name:'青 皮克敏 A',status:3,dups:1},
+        {id:'i12',name:'青 皮克敏 B',status:1,dups:1},
+        {id:'i13',name:'紫 皮克敏',  status:0,dups:0}
+      ]}
+    ]}
   ];
-  saveData(data);
-  initOpen();
+  saveData(data); initOpen();
 }
 
 render();
