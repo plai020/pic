@@ -3,7 +3,28 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>皮克敏全能收集助手 v5.1</title>
+<title>🌱 皮克敏圖鑑</title>
+
+<!-- ── PWA / iOS 桌面 App 設定 ── -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="皮克敏圖鑑">
+<meta name="theme-color" content="#111111">
+
+<!-- ── App 圖示（iPhone 主畫面） ── -->
+<link rel="apple-touch-icon" href="https://img.favpng.com/15/8/10/purple-pikmin-purple-pikmin-with-flower-EgkTRg5F.jpg">
+<link rel="apple-touch-icon" sizes="120x120" href="https://img.favpng.com/15/8/10/purple-pikmin-purple-pikmin-with-flower-EgkTRg5F.jpg">
+<link rel="apple-touch-icon" sizes="152x152" href="https://img.favpng.com/15/8/10/purple-pikmin-purple-pikmin-with-flower-EgkTRg5F.jpg">
+<link rel="apple-touch-icon" sizes="167x167" href="https://img.favpng.com/15/8/10/purple-pikmin-purple-pikmin-with-flower-EgkTRg5F.jpg">
+<link rel="apple-touch-icon" sizes="180x180" href="https://img.favpng.com/15/8/10/purple-pikmin-purple-pikmin-with-flower-EgkTRg5F.jpg">
+
+<!-- ── 啟動畫面 Splash Screen（深灰背景 + 置中 App 名稱） ── -->
+<style id="splash-style">
+  @media (prefers-color-scheme: dark) {}
+  /* iOS standalone 啟動時 body 即呈現 background:#111，
+     配合 theme-color 黑色讓狀態列融入 */
+</style>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body{font-family:system-ui,sans-serif;background:#111;color:#eee;overscroll-behavior:none}
@@ -946,6 +967,37 @@ if (data.cats.length === 0) {
 }
 
 render();
+
+/* ── 啟動畫面：僅在 iOS standalone 模式顯示 ── */
+(function() {
+  const isStandalone = navigator.standalone === true ||
+    window.matchMedia('(display-mode: standalone)').matches;
+  if (!isStandalone) return;
+
+  const splash = document.createElement('div');
+  splash.id = 'splash';
+  splash.style.cssText = [
+    'position:fixed','inset:0','z-index:99999',
+    'background:#111',
+    'display:flex','flex-direction:column',
+    'align-items:center','justify-content:center','gap:18px',
+    'transition:opacity 0.5s ease'
+  ].join(';');
+  splash.innerHTML = `
+    <img src="https://img.favpng.com/15/8/10/purple-pikmin-purple-pikmin-with-flower-EgkTRg5F.jpg"
+         style="width:96px;height:96px;border-radius:22px;object-fit:cover;box-shadow:0 4px 24px rgba(0,0,0,0.6)"
+         onerror="this.style.display='none'">
+    <div style="font-family:system-ui,sans-serif;font-size:22px;font-weight:500;color:#eee;letter-spacing:0.02em">🌱 皮克敏圖鑑</div>
+    <div style="font-size:13px;color:#555">收集助手</div>
+  `;
+  document.body.appendChild(splash);
+
+  // 300ms 後淡出消失
+  setTimeout(() => {
+    splash.style.opacity = '0';
+    setTimeout(() => splash.remove(), 520);
+  }, 700);
+})();
 </script>
 </body>
 </html>
